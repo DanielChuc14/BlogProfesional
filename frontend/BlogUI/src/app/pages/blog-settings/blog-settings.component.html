@@ -1,0 +1,403 @@
+@if (cropFile()) {
+  <app-image-cropper-modal
+    [imageFile]="cropFile()!"
+    [aspectRatio]="cropAspect()"
+    [resizeToWidth]="cropResize()"
+    [title]="cropTitle()"
+    (cropped)="onCropConfirmed($event)"
+    (cancelled)="onCropCancelled()"
+  />
+}
+
+@if (loading()) {
+  <app-spinner />
+} @else if (!profile()) {
+  <div class="max-w-3xl mx-auto px-4 py-16 text-center text-gray-400">
+    <p>{{ 'settings_couldNotLoad' | translate }}</p>
+  </div>
+} @else {
+  <div class="max-w-5xl mx-auto px-4 py-8">
+
+    <!-- Page header -->
+    <div class="flex items-center justify-between mb-8">
+      <div>
+        <h1 class="text-2xl font-bold text-gray-900">{{ 'settings_title' | translate }}</h1>
+        <p class="text-sm text-gray-500 mt-1">{{ 'settings_subtitle' | translate }}</p>
+      </div>
+      <a [routerLink]="['/profile', profile()!.username]"
+         class="btn btn-secondary btn-sm no-underline">
+        {{ 'settings_viewMyBlog' | translate }}
+      </a>
+    </div>
+
+    <div class="flex flex-col md:flex-row gap-6">
+
+      <!-- Sidebar tabs -->
+      <nav class="md:w-52 shrink-0">
+        <ul class="flex flex-row md:flex-col gap-1 overflow-x-auto md:overflow-visible pb-2 md:pb-0">
+          <li>
+            <button (click)="setTab('profile')"
+              class="w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap"
+              [class]="activeTab() === 'profile' ? 'bg-primary-50 text-primary-700' : 'text-gray-600 hover:bg-gray-100'">
+              {{ 'settings_tab_profile' | translate }}
+            </button>
+          </li>
+          <li>
+            <button (click)="setTab('appearance')"
+              class="w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap"
+              [class]="activeTab() === 'appearance' ? 'bg-primary-50 text-primary-700' : 'text-gray-600 hover:bg-gray-100'">
+              {{ 'settings_tab_appearance' | translate }}
+            </button>
+          </li>
+          <li>
+            <button (click)="setTab('notices')"
+              class="w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap"
+              [class]="activeTab() === 'notices' ? 'bg-primary-50 text-primary-700' : 'text-gray-600 hover:bg-gray-100'">
+              {{ 'settings_tab_notices' | translate }}
+            </button>
+          </li>
+          <li>
+            <button (click)="setTab('links')"
+              class="w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap"
+              [class]="activeTab() === 'links' ? 'bg-primary-50 text-primary-700' : 'text-gray-600 hover:bg-gray-100'">
+              {{ 'settings_tab_links' | translate }}
+            </button>
+          </li>
+          <li>
+            <button (click)="setTab('filters')"
+              class="w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap"
+              [class]="activeTab() === 'filters' ? 'bg-primary-50 text-primary-700' : 'text-gray-600 hover:bg-gray-100'">
+              {{ 'settings_tab_filters' | translate }}
+            </button>
+          </li>
+        </ul>
+      </nav>
+
+      <!-- Content area -->
+      <div class="flex-1 min-w-0">
+
+        <!-- ── PROFILE ── -->
+        @if (activeTab() === 'profile') {
+          <div class="card p-6">
+            <h2 class="text-base font-semibold text-gray-900 mb-5">{{ 'settings_profileInfo' | translate }}</h2>
+            <div class="flex flex-col gap-4">
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label class="label">{{ 'settings_displayNameRequired' | translate }}</label>
+                  <input type="text" class="input" [(ngModel)]="profileDisplayName" name="displayName" />
+                </div>
+                <div>
+                  <label class="label">{{ 'profile_tagline' | translate }}</label>
+                  <input type="text" class="input" [(ngModel)]="profileTagline" name="tagline"
+                    placeholder="A short phrase that defines you..." />
+                </div>
+              </div>
+
+              <div>
+                <label class="label">{{ 'profile_bio' | translate }} <span class="text-gray-400 font-normal">{{ 'profile_bioShort' | translate }}</span></label>
+                <textarea class="input resize-none" rows="2" [(ngModel)]="profileBio" name="bio"></textarea>
+              </div>
+
+              <div>
+                <label class="label">{{ 'profile_about' | translate }} <span class="text-gray-400 font-normal">{{ 'profile_bioExtended' | translate }}</span></label>
+                <textarea class="input resize-y" rows="4" [(ngModel)]="profileAbout" name="about"></textarea>
+              </div>
+
+              <div class="border-t border-gray-100 pt-4">
+                <p class="text-sm font-medium text-gray-700 mb-3">{{ 'settings_photoProfile' | translate }}</p>
+                <div class="flex items-center gap-4">
+                  @if (profile()?.avatarUrl) {
+                    <img [src]="profile()!.avatarUrl" alt="Avatar"
+                      class="w-16 h-16 rounded-full object-cover border border-gray-200 shrink-0">
+                  } @else {
+                    <div class="w-16 h-16 rounded-full bg-primary-100 flex items-center justify-center text-xl font-bold text-primary-600 shrink-0">
+                      {{ profile()!.displayName.charAt(0) }}
+                    </div>
+                  }
+                  <div>
+                    <label class="label">{{ 'profile_uploadPhoto' | translate }}</label>
+                    <input type="file" accept="image/jpeg,image/png,image/webp"
+                      (change)="onAvatarChange($event)" class="text-sm text-gray-600 file:mr-3 file:py-1 file:px-3 file:rounded file:border-0 file:text-sm file:bg-gray-100 file:text-gray-700 hover:file:bg-gray-200" />
+                    <p class="text-xs text-gray-400 mt-1">JPEG, PNG or WebP, max 5 MB</p>
+                  </div>
+                </div>
+              </div>
+
+              @if (auth.isBlogger()) {
+                <div class="border-t border-gray-100 pt-4">
+                  <p class="text-sm font-medium text-gray-700 mb-3">{{ 'settings_photoCover' | translate }}</p>
+                  @if (profile()?.bannerUrl) {
+                    <img [src]="profile()!.bannerUrl" alt="Banner"
+                      class="w-full h-24 object-cover rounded-lg border border-gray-200 mb-3">
+                  }
+                  <div>
+                    <label class="label">{{ 'settings_uploadNewCover' | translate }}</label>
+                    <input type="file" accept="image/jpeg,image/png,image/webp"
+                      (change)="onBannerChange($event)" class="text-sm text-gray-600 file:mr-3 file:py-1 file:px-3 file:rounded file:border-0 file:text-sm file:bg-gray-100 file:text-gray-700 hover:file:bg-gray-200" />
+                    <p class="text-xs text-gray-400 mt-1">Wide image shown at the top of your blog. JPEG, PNG or WebP, max 5 MB</p>
+                  </div>
+                </div>
+              }
+
+              <div class="border-t border-gray-100 pt-4">
+                <p class="text-sm font-medium text-gray-700 mb-3">{{ 'settings_socialLinks' | translate }}</p>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label class="label">{{ 'profile_website' | translate }}</label>
+                    <input type="url" class="input" [(ngModel)]="profileWebsite" name="website"
+                      placeholder="https://mysite.com" />
+                  </div>
+                  <div>
+                    <label class="label">Twitter / X</label>
+                    <input type="url" class="input" [(ngModel)]="profileTwitter" name="twitter"
+                      placeholder="https://x.com/username" />
+                  </div>
+                  <div>
+                    <label class="label">LinkedIn</label>
+                    <input type="url" class="input" [(ngModel)]="profileLinkedIn" name="linkedin"
+                      placeholder="https://linkedin.com/in/username" />
+                  </div>
+                  <div>
+                    <label class="label">GitHub</label>
+                    <input type="url" class="input" [(ngModel)]="profileGitHub" name="github"
+                      placeholder="https://github.com/username" />
+                  </div>
+                </div>
+              </div>
+
+              <div class="pt-2">
+                <button class="btn btn-primary" [disabled]="profileSaving()" (click)="saveProfile()">
+                  @if (profileSaving()) { {{ 'profile_saving' | translate }} } @else { {{ 'settings_saveProfile' | translate }} }
+                </button>
+              </div>
+            </div>
+          </div>
+        }
+
+        <!-- ── APPEARANCE ── -->
+        @if (activeTab() === 'appearance') {
+          <div class="card p-6">
+            <h2 class="text-base font-semibold text-gray-900 mb-1">{{ 'profile_blogAppearance' | translate }}</h2>
+            <p class="text-sm text-gray-500 mb-5">{{ 'settings_blogAppearanceDesc' | translate }}</p>
+
+            <div class="flex flex-col gap-5">
+
+              <!-- Color preview -->
+              <div class="rounded-lg overflow-hidden border border-gray-200">
+                <div class="h-10 w-full" [style.background-color]="themePrimary"></div>
+                <div class="flex divide-x divide-gray-200">
+                  <div class="flex-1 h-6" [style.background-color]="themeSecondary"></div>
+                  <div class="flex-1 h-6" [style.background-color]="themeAccent"></div>
+                </div>
+                <div class="px-3 py-2 bg-gray-50 text-xs text-gray-400">{{ 'settings_colorPreview' | translate }}</div>
+              </div>
+
+              <!-- Color pickers -->
+              <div class="grid grid-cols-3 gap-4">
+                <div>
+                  <label class="label">{{ 'profile_primaryColor' | translate }}</label>
+                  <div class="flex items-center gap-2">
+                    <input type="color" class="w-10 h-10 rounded cursor-pointer border border-gray-300 p-0.5"
+                      [(ngModel)]="themePrimary" name="primaryColor" />
+                    <input type="text" class="input flex-1 font-mono text-sm"
+                      [(ngModel)]="themePrimary" name="primaryColorText" placeholder="#0284c7" />
+                  </div>
+                </div>
+                <div>
+                  <label class="label">{{ 'profile_secondaryColor' | translate }}</label>
+                  <div class="flex items-center gap-2">
+                    <input type="color" class="w-10 h-10 rounded cursor-pointer border border-gray-300 p-0.5"
+                      [(ngModel)]="themeSecondary" name="secondaryColor" />
+                    <input type="text" class="input flex-1 font-mono text-sm"
+                      [(ngModel)]="themeSecondary" name="secondaryColorText" placeholder="#0369a1" />
+                  </div>
+                </div>
+                <div>
+                  <label class="label">{{ 'profile_accentColor' | translate }}</label>
+                  <div class="flex items-center gap-2">
+                    <input type="color" class="w-10 h-10 rounded cursor-pointer border border-gray-300 p-0.5"
+                      [(ngModel)]="themeAccent" name="accentColor" />
+                    <input type="text" class="input flex-1 font-mono text-sm"
+                      [(ngModel)]="themeAccent" name="accentColorText" placeholder="#0ea5e9" />
+                  </div>
+                </div>
+              </div>
+
+              <!-- Font & layout -->
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label class="label">{{ 'profile_fontFamily' | translate }}</label>
+                  <select class="input" [(ngModel)]="themeFontFamily" name="fontFamily">
+                    <option value="sans">Sans-serif (default)</option>
+                    <option value="serif">Serif</option>
+                    <option value="mono">Monospace</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="label">{{ 'profile_postLayout' | translate }}</label>
+                  <select class="input" [(ngModel)]="themeLayoutStyle" name="layoutStyle">
+                    <option value="grid">Grid cards (2 columns)</option>
+                    <option value="list">Compact list</option>
+                    <option value="magazine">Magazine (3 columns)</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- Dark mode -->
+              <div class="flex items-center gap-3 py-1">
+                <input type="checkbox" id="darkModeToggle" [(ngModel)]="themeDarkMode" name="darkMode"
+                  class="w-4 h-4 rounded" />
+                <label for="darkModeToggle" class="text-sm text-gray-700 cursor-pointer">
+                  {{ 'settings_darkModeForVisitors' | translate }}
+                </label>
+              </div>
+
+              <div class="pt-2 border-t border-gray-100">
+                <button class="btn btn-primary" [disabled]="themeSaving()" (click)="saveTheme()">
+                  @if (themeSaving()) { {{ 'profile_saving' | translate }} } @else { {{ 'settings_saveAppearance' | translate }} }
+                </button>
+              </div>
+            </div>
+          </div>
+        }
+
+        <!-- ── NOTICES ── -->
+        @if (activeTab() === 'notices') {
+          <div class="card p-6">
+            <h2 class="text-base font-semibold text-gray-900 mb-1">{{ 'settings_noticesTitle' | translate }}</h2>
+            <p class="text-sm text-gray-500 mb-5">{{ 'settings_noticesDesc' | translate }}</p>
+
+            <!-- Add notice form -->
+            <div class="bg-gray-50 rounded-lg p-4 mb-6 flex flex-col gap-3">
+              <p class="text-sm font-medium text-gray-700">{{ 'settings_newNotice' | translate }}</p>
+              <input type="text" class="input" placeholder="Title..." [(ngModel)]="newNoticeTitle" name="noticeTitle" />
+              <textarea class="input resize-none" rows="2" placeholder="Content..."
+                [(ngModel)]="newNoticeContent" name="noticeContent"></textarea>
+              <div class="flex flex-wrap items-center gap-3">
+                <select class="input w-auto" [(ngModel)]="newNoticeType" name="noticeType">
+                  <option value="Info">Info</option>
+                  <option value="Warning">Warning</option>
+                  <option value="Success">Success</option>
+                  <option value="Promo">Promo</option>
+                </select>
+                <label class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
+                  <input type="checkbox" [(ngModel)]="newNoticeActive" name="noticeActive" class="w-4 h-4 rounded" />
+                  {{ 'settings_activeLabel' | translate }}
+                </label>
+                <button class="btn btn-primary btn-sm" [disabled]="noticeSaving()" (click)="addNotice()">
+                  @if (noticeSaving()) { {{ 'settings_adding' | translate }} } @else { {{ 'settings_addNotice' | translate }} }
+                </button>
+              </div>
+            </div>
+
+            <!-- Existing notices -->
+            @if (noticesLoading()) {
+              <app-spinner size="sm" wrapperClass="py-4" />
+            } @else if (notices().length === 0) {
+              <p class="text-sm text-gray-400 text-center py-6">{{ 'settings_noNoticesYet' | translate }}</p>
+            } @else {
+              <div class="flex flex-col gap-3">
+                @for (notice of notices(); track notice.id) {
+                  <div class="rounded-lg border-l-4 px-4 py-3 flex items-start gap-3"
+                    [class]="noticeTypeClass(notice.type)">
+                    <div class="flex-1 min-w-0">
+                      <p class="text-sm font-semibold">{{ notice.title }}</p>
+                      <p class="text-xs opacity-80 mt-0.5">{{ notice.content }}</p>
+                      <p class="text-xs opacity-60 mt-1">{{ notice.type }} · {{ notice.isActive ? ('settings_activeLabel' | translate) : 'Inactive' }}</p>
+                    </div>
+                    <button class="btn btn-danger btn-sm text-xs px-2 shrink-0" (click)="deleteNotice(notice.id)">
+                      {{ 'common_delete' | translate }}
+                    </button>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        }
+
+        <!-- ── QUICK LINKS ── -->
+        @if (activeTab() === 'links') {
+          <div class="card p-6">
+            <h2 class="text-base font-semibold text-gray-900 mb-1">{{ 'settings_quickLinksTitle' | translate }}</h2>
+            <p class="text-sm text-gray-500 mb-5">{{ 'settings_quickLinksDesc' | translate }}</p>
+
+            <!-- Add link form -->
+            <div class="bg-gray-50 rounded-lg p-4 mb-6 flex flex-col gap-3">
+              <p class="text-sm font-medium text-gray-700">{{ 'settings_newLink' | translate }}</p>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <input type="text" class="input" placeholder="Label (e.g. My Portfolio)"
+                  [(ngModel)]="newLinkTitle" name="linkTitle" />
+                <input type="url" class="input" placeholder="URL (https://...)"
+                  [(ngModel)]="newLinkUrl" name="linkUrl" />
+              </div>
+              <div class="flex items-center gap-3">
+                <input type="text" class="input flex-1" placeholder="Icon emoji (optional, e.g. 🌐)"
+                  [(ngModel)]="newLinkIcon" name="linkIcon" />
+                <button class="btn btn-primary btn-sm shrink-0" [disabled]="linkSaving()" (click)="addQuickLink()">
+                  @if (linkSaving()) { {{ 'settings_adding' | translate }} } @else { {{ 'settings_addLink' | translate }} }
+                </button>
+              </div>
+            </div>
+
+            <!-- Existing links -->
+            @if (quickLinks().length === 0) {
+              <p class="text-sm text-gray-400 text-center py-6">{{ 'settings_noLinksYet' | translate }}</p>
+            } @else {
+              <div class="flex flex-col gap-2">
+                @for (link of quickLinks(); track link.id) {
+                  <div class="flex items-center gap-3 rounded-lg border border-gray-200 px-4 py-3">
+                    @if (link.icon) { <span class="text-xl">{{ link.icon }}</span> }
+                    <div class="flex-1 min-w-0">
+                      <p class="text-sm font-medium text-gray-800">{{ link.title }}</p>
+                      <p class="text-xs text-gray-400 truncate">{{ link.url }}</p>
+                    </div>
+                    <button class="btn btn-danger btn-sm text-xs px-2 shrink-0" (click)="deleteQuickLink(link.id)">
+                      {{ 'common_delete' | translate }}
+                    </button>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        }
+
+        <!-- ── WORD FILTERS ── -->
+        @if (activeTab() === 'filters') {
+          <div class="card p-6">
+            <h2 class="text-base font-semibold text-gray-900 mb-1">{{ 'settings_filtersTitle' | translate }}</h2>
+            <p class="text-sm text-gray-500 mb-5">{{ 'settings_filtersDesc' | translate }}</p>
+
+            <!-- Add filter -->
+            <div class="flex gap-2 mb-6">
+              <input type="text" class="input flex-1" placeholder="Word or phrase..."
+                [(ngModel)]="newFilterWord" name="filterWord" />
+              <button class="btn btn-primary btn-sm shrink-0" [disabled]="filterSaving()" (click)="addWordFilter()">
+                @if (filterSaving()) { {{ 'settings_adding' | translate }} } @else { {{ 'common_add' | translate }} }
+              </button>
+            </div>
+
+            <!-- Existing filters -->
+            @if (wordFiltersLoading()) {
+              <app-spinner size="sm" wrapperClass="py-4" />
+            } @else if (wordFilters().length === 0) {
+              <p class="text-sm text-gray-400 text-center py-6">{{ 'settings_noFiltersYet' | translate }}</p>
+            } @else {
+              <div class="flex flex-wrap gap-2">
+                @for (filter of wordFilters(); track filter.id) {
+                  <span class="badge badge-gray flex items-center gap-1.5 text-sm py-1 px-3">
+                    {{ filter.word }}
+                    <button class="hover:text-red-600 transition-colors font-bold ml-1"
+                      (click)="deleteWordFilter(filter.id)">&times;</button>
+                  </span>
+                }
+              </div>
+            }
+          </div>
+        }
+
+      </div>
+    </div>
+
+  </div>
+}

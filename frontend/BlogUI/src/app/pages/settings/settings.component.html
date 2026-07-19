@@ -1,0 +1,174 @@
+<div class="max-w-2xl mx-auto px-4 py-8">
+
+  <h1 class="text-2xl font-bold text-gray-900 mb-6">{{ 'settings_title' | translate }}</h1>
+
+  <!-- Tabs -->
+  <div class="flex gap-1 border-b border-gray-200 mb-6">
+    @for (tab of tabs; track tab.id) {
+      <button
+        class="px-4 py-2 text-sm font-medium border-b-2 transition-colors"
+        [class.border-primary-600]="activeTab() === tab.id"
+        [class.text-primary-600]="activeTab() === tab.id"
+        [class.border-transparent]="activeTab() !== tab.id"
+        [class.text-gray-500]="activeTab() !== tab.id"
+        (click)="setTab(tab.id)">
+        {{ tab.label | translate }}
+      </button>
+    }
+  </div>
+
+  <!-- ── Account tab ─────────────────────────────────────────────────── -->
+  @if (activeTab() === 'account') {
+    @if (prefsLoading()) {
+      <app-spinner />
+    } @else {
+      <div class="space-y-6">
+
+        <!-- Avatar -->
+        <div class="flex items-center gap-5">
+          <div class="w-16 h-16 rounded-full overflow-hidden bg-gray-100 shrink-0">
+            @if (auth.user()?.avatarUrl) {
+              <img [src]="auth.user()!.avatarUrl!" alt="avatar" class="w-full h-full object-cover" />
+            } @else {
+              <div class="w-full h-full flex items-center justify-center text-2xl text-gray-400 font-bold">
+                {{ auth.user()?.displayName?.[0]?.toUpperCase() ?? '?' }}
+              </div>
+            }
+          </div>
+          <div>
+            <p class="text-sm font-medium text-gray-700 mb-1">{{ 'settings_avatar' | translate }}</p>
+            <label class="btn btn-secondary btn-sm cursor-pointer">
+              @if (avatarSaving()) {
+                <app-spinner class="w-4 h-4" />
+              } @else {
+                {{ 'settings_avatarChange' | translate }}
+              }
+              <input type="file" accept="image/*" class="hidden" (change)="onAvatarSelected($event)" />
+            </label>
+          </div>
+        </div>
+
+        <!-- Banner (Bloggers only) -->
+        @if (auth.isBlogger()) {
+          <div>
+            <p class="text-sm font-medium text-gray-700 mb-2">{{ 'settings_banner' | translate }}</p>
+            <div class="w-full h-28 rounded-lg overflow-hidden bg-gray-100 mb-2">
+              @if (bannerUrl()) {
+                <img [src]="bannerUrl()!" alt="banner" class="w-full h-full object-cover" />
+              } @else {
+                <div class="w-full h-full bg-gradient-to-r from-primary-400 to-primary-600"></div>
+              }
+            </div>
+            <label class="btn btn-secondary btn-sm cursor-pointer">
+              @if (bannerSaving()) {
+                <app-spinner class="w-4 h-4" />
+              } @else {
+                {{ 'settings_bannerChange' | translate }}
+              }
+              <input type="file" accept="image/*" class="hidden" (change)="onBannerSelected($event)" />
+            </label>
+            <p class="text-xs text-gray-400 mt-1">{{ 'settings_bannerHint' | translate }}</p>
+          </div>
+        }
+
+        <!-- Display name -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">
+            {{ 'settings_displayName' | translate }}
+          </label>
+          <input class="input w-full" [(ngModel)]="displayName" maxlength="100" />
+        </div>
+
+        <!-- Bio -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">
+            {{ 'settings_bio' | translate }}
+          </label>
+          <textarea class="input w-full resize-none" rows="3" maxlength="300"
+            [placeholder]="'settings_bioPlaceholder' | translate"
+            [(ngModel)]="bio"></textarea>
+        </div>
+
+        <!-- Language -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">
+            {{ 'settings_language' | translate }}
+          </label>
+          <select class="input w-full" [(ngModel)]="selectedLang">
+            @for (lang of langSvc.activeLanguages(); track lang.code) {
+              <option [value]="lang.code">{{ lang.nativeName }}</option>
+            }
+          </select>
+        </div>
+
+        <!-- Email (read-only) -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">
+            {{ 'settings_email' | translate }}
+          </label>
+          <input class="input w-full bg-gray-50 text-gray-500 cursor-not-allowed"
+                 [value]="auth.user()?.email ?? ''" readonly />
+          <p class="text-xs text-gray-400 mt-1">{{ 'settings_emailNote' | translate }}</p>
+        </div>
+
+        <div class="flex justify-end pt-2">
+          <button class="btn btn-primary"
+                  [disabled]="prefsSaving() || !displayName.trim()"
+                  (click)="saveAccount()">
+            {{ prefsSaving() ? ('common_saving' | translate) : ('common_save' | translate) }}
+          </button>
+        </div>
+
+      </div>
+    }
+  }
+
+  <!-- ── Privacy tab ─────────────────────────────────────────────────── -->
+  @if (activeTab() === 'privacy') {
+    <div class="space-y-6">
+
+      <!-- Profile visibility -->
+      <div>
+        <p class="text-sm font-medium text-gray-700 mb-2">{{ 'settings_profileVisibility' | translate }}</p>
+        <div class="space-y-2">
+          <label class="flex items-start gap-3 cursor-pointer">
+            <input type="radio" class="radio mt-0.5" name="visibility"
+                   value="public" [(ngModel)]="profileVisibility" />
+            <span class="text-sm text-gray-700">{{ 'settings_visibility_public' | translate }}</span>
+          </label>
+          <label class="flex items-start gap-3 cursor-pointer">
+            <input type="radio" class="radio mt-0.5" name="visibility"
+                   value="followers" [(ngModel)]="profileVisibility" />
+            <span class="text-sm text-gray-700">{{ 'settings_visibility_followers' | translate }}</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Email notifications -->
+      <div class="flex items-start gap-3">
+        <input type="checkbox" class="checkbox mt-0.5"
+               [(ngModel)]="receiveEmailNotifications" />
+        <div>
+          <p class="text-sm font-medium text-gray-700">{{ 'settings_emailNotifications' | translate }}</p>
+          <p class="text-xs text-gray-400 mt-0.5">{{ 'settings_emailNotificationsHint' | translate }}</p>
+        </div>
+      </div>
+
+      <div class="flex justify-end pt-2">
+        <button class="btn btn-primary"
+                [disabled]="privacySaving()"
+                (click)="savePrivacy()">
+          {{ privacySaving() ? ('common_saving' | translate) : ('common_save' | translate) }}
+        </button>
+      </div>
+
+      <!-- Blocked users -->
+      <div class="pt-4 border-t border-gray-200">
+        <p class="text-sm font-semibold text-gray-700 mb-3">{{ 'settings_blockedUsers' | translate }}</p>
+        <app-blocked-users />
+      </div>
+
+    </div>
+  }
+
+</div>

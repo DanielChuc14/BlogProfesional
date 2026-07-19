@@ -1,0 +1,14 @@
+using BlogPlatform.Application.DTOs.Community;
+using FluentValidation;
+
+namespace BlogPlatform.Application.Validators.Community;
+
+public class UpdateCommentRequestValidator : AbstractValidator<UpdateCommentRequest>
+{
+    public UpdateCommentRequestValidator()
+    {
+        RuleFor(x => x.Body)
+            .NotEmpty().WithMessage("Comment body is required.")
+            .MaximumLength(2000).WithMessage("Comment body must not exceed 2000 characters.");
+    }
+}

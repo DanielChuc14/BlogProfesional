@@ -1,0 +1,23 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>0ca33c29-5488-44c7-8f23-8fc088055605</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AspNetCore.HealthChecks.NpgSql" Version="9.0.0" />
+    <PackageReference Include="AspNetCore.HealthChecks.Redis" Version="9.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.5" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="10.2.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\BlogPlatform.Application\BlogPlatform.Application.csproj" />
+    <ProjectReference Include="..\BlogPlatform.Domain\BlogPlatform.Domain.csproj" />
+    <ProjectReference Include="..\BlogPlatform.Infrastructure\BlogPlatform.Infrastructure.csproj" />
+  </ItemGroup>
+
+</Project>

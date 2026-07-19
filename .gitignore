@@ -1,0 +1,32 @@
+# Root .gitignore — reglas globales del monorepo.
+# Cada stack tiene su propio .gitignore:
+#   backend/BlogPlatform/.gitignore  (.NET)
+#   frontend/BlogUI/.gitignore       (Angular)
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+ehthumbs.db
+
+# Editores / IDEs
+.idea/
+*.swp
+*.swo
+*~
+
+# VS Code (a nivel raíz; se permite compartir config común)
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# Variables de entorno globales
+.env
+.env.*
+!.env.example
+
+# Logs y temporales sueltos
+*.log
+*.tmp

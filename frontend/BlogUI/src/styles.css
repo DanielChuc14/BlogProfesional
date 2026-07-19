@@ -1,0 +1,158 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+  }
+
+  body {
+    @apply bg-gray-50 text-gray-900;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-semibold tracking-tight;
+  }
+}
+
+@layer components {
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-md px-4 py-2 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  .btn-primary {
+    @apply btn bg-primary-600 text-white hover:bg-primary-700 focus:ring-primary-500;
+  }
+  .btn-secondary {
+    @apply btn bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 focus:ring-primary-500;
+  }
+  .btn-danger {
+    @apply btn bg-red-600 text-white hover:bg-red-700 focus:ring-red-500;
+  }
+  .btn-ghost {
+    @apply btn bg-transparent text-gray-600 hover:bg-gray-100 focus:ring-gray-400;
+  }
+  .btn-sm {
+    @apply px-3 py-1.5 text-xs;
+  }
+  .btn-lg {
+    @apply px-6 py-3 text-base;
+  }
+
+  .input {
+    @apply block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder-gray-400 shadow-sm transition focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 disabled:bg-gray-50 disabled:text-gray-500;
+  }
+  .input-error {
+    @apply border-red-400 focus:border-red-500 focus:ring-red-500;
+  }
+
+  .label {
+    @apply block text-sm font-medium text-gray-700 mb-1;
+  }
+  .error-msg {
+    @apply text-xs text-red-600 mt-1;
+  }
+
+  .card {
+    @apply bg-white rounded-xl border border-gray-200 shadow-sm;
+  }
+
+  .badge {
+    @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium;
+  }
+  .badge-gray   { @apply badge bg-gray-100 text-gray-700; }
+  .badge-blue   { @apply badge bg-blue-100 text-blue-700; }
+  .badge-green  { @apply badge bg-green-100 text-green-700; }
+  .badge-red    { @apply badge bg-red-100 text-red-700; }
+}
+
+::-webkit-scrollbar       { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 9999px; }
+::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
+
+/* Dark mode - applied when .dark class is on <html> */
+.dark body {
+  @apply bg-gray-900 text-gray-100;
+}
+
+.dark .card {
+  @apply bg-gray-800 border-gray-700;
+}
+
+.dark .input {
+  @apply bg-gray-800 border-gray-600 text-gray-100 placeholder-gray-500;
+}
+
+.dark .btn-secondary {
+  @apply bg-gray-800 text-gray-200 border-gray-600 hover:bg-gray-700;
+}
+
+.dark .btn-ghost {
+  @apply text-gray-300 hover:bg-gray-800;
+}
+
+/* Text */
+.dark .text-gray-900 { color: rgb(243 244 246); }
+.dark .text-gray-800 { color: rgb(229 231 235); }
+.dark .text-gray-700 { color: rgb(209 213 219); }
+.dark .text-gray-600 { color: rgb(156 163 175); }
+
+/* Backgrounds */
+.dark .bg-white    { background-color: rgb(31 41 55); }
+.dark .bg-gray-50  { background-color: rgb(31 41 55); }
+.dark .bg-gray-100 { background-color: rgb(55 65 81); }
+.dark .bg-red-50   { background-color: rgb(127 29 29 / 0.2); }
+.dark .bg-green-50 { background-color: rgb(20 83 45 / 0.2); }
+
+/* Borders */
+.dark .border-gray-100 { border-color: rgb(55 65 81); }
+.dark .border-gray-200 { border-color: rgb(55 65 81); }
+.dark .border-gray-300 { border-color: rgb(75 85 99); }
+
+/* Hover states */
+.dark .hover\:bg-gray-50:hover  { background-color: rgb(55 65 81); }
+.dark .hover\:bg-gray-100:hover { background-color: rgb(75 85 99); }
+.dark .hover\:bg-gray-200:hover { background-color: rgb(75 85 99); }
+
+/* Status */
+.dark .text-red-600   { color: rgb(252 165 165); }
+.dark .text-green-700 { color: rgb(134 239 172); }
+.dark .text-green-500 { color: rgb(134 239 172); }
+
+/* Custom component classes */
+.dark .label     { color: rgb(209 213 219); }
+.dark .error-msg { color: rgb(252 165 165); }
+
+/* Badge variants */
+.dark .badge-gray   { background-color: rgb(55 65 81);        color: rgb(209 213 219); }
+.dark .badge-blue   { background-color: rgb(30 58 138 / 0.4); color: rgb(147 197 253); }
+.dark .badge-red    { background-color: rgb(127 29 29 / 0.4); color: rgb(252 165 165); }
+.dark .badge-green  { background-color: rgb(20 83 45 / 0.4);  color: rgb(134 239 172); }
+.dark .badge-yellow { background-color: rgb(113 63 18 / 0.4); color: rgb(253 224 71);  }
+.dark .badge-purple { background-color: rgb(88 28 135 / 0.4); color: rgb(216 180 254); }
+
+/* Skeleton */
+.dark .skeleton { background-color: rgb(55 65 81); }
+
+/* Scrollbar */
+.dark ::-webkit-scrollbar-thumb { background: #4b5563; }
+
+/* Skeleton loading animation */
+.skeleton {
+  @apply bg-gray-200 rounded animate-pulse;
+}
+
+/* Smooth page transitions */
+.page-transition {
+  animation: fadeIn 0.15s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Badge variants */
+.badge-yellow { @apply badge bg-yellow-100 text-yellow-800; }
+.badge-purple { @apply badge bg-purple-100 text-purple-700; }

@@ -1,0 +1,72 @@
+<article class="card p-5 flex flex-col gap-3 hover:shadow-md transition-shadow">
+  @if (post().coverImageUrl) {
+    <a [routerLink]="['/post', post().slug]" class="relative block">
+      <img [src]="post().coverImageUrl" [alt]="post().title"
+           class="w-full h-48 object-cover rounded-lg" loading="lazy" />
+      @if (post().isAdultContent) {
+        <span class="absolute top-2 right-2 badge badge-red font-semibold">+18</span>
+      }
+      @if (post().isFeatured) {
+        <span class="absolute top-2 left-2 badge bg-yellow-100 text-yellow-800 font-semibold">{{ 'postcard_featured' | translate }}</span>
+      }
+    </a>
+  } @else {
+    <div class="flex items-center gap-2">
+      @if (post().isAdultContent) {
+        <span class="badge badge-red font-semibold">+18</span>
+      }
+      @if (post().isFeatured) {
+        <span class="badge bg-yellow-100 text-yellow-800 font-semibold">{{ 'postcard_featured' | translate }}</span>
+      }
+    </div>
+  }
+
+  <div class="flex items-center gap-2 text-xs text-gray-500">
+    @if (post().author.avatarUrl) {
+      <img [src]="post().author.avatarUrl" [alt]="post().author.displayName"
+           class="w-6 h-6 rounded-full object-cover" />
+    } @else {
+      <div class="w-6 h-6 rounded-full bg-primary-100 flex items-center justify-center text-primary-600 text-xs font-semibold">
+        {{ post().author.displayName.charAt(0) }}
+      </div>
+    }
+    <a [routerLink]="['/profile', post().author.username]"
+       class="font-medium text-gray-700 no-underline hover:underline">
+      {{ post().author.displayName }}
+    </a>
+    <span>&middot;</span>
+    <time>{{ post().publishedAt | date:'MMM d, y' }}</time>
+    @if (post().readTimeMinutes) {
+      <span>&middot;</span>
+      <span>{{ post().readTimeMinutes }} {{ 'postcard_minRead' | translate }}</span>
+    }
+  </div>
+
+  <div>
+    <a [routerLink]="['/post', post().slug]" class="no-underline group">
+      <h2 class="text-lg font-semibold text-gray-900 group-hover:text-primary-600 transition-colors line-clamp-2">
+        {{ post().title }}
+      </h2>
+      @if (post().excerpt) {
+        <p class="mt-1 text-sm text-gray-500 line-clamp-3">{{ post().excerpt }}</p>
+      }
+    </a>
+  </div>
+
+  @if (post().tags.length > 0) {
+    <div class="flex flex-wrap gap-1">
+      @for (tag of post().tags.slice(0, 3); track tag.id) {
+        <a [routerLink]="['/tag', tag.slug]"
+           class="badge badge-gray no-underline hover:bg-gray-200 transition-colors">
+          {{ tag.name }}
+        </a>
+      }
+    </div>
+  }
+
+  <div class="flex items-center gap-4 text-xs text-gray-400 pt-1 border-t border-gray-100">
+    <span>{{ post().viewCount }} {{ 'postcard_views' | translate }}</span>
+    <span>{{ post().likesCount }} {{ 'postcard_likes' | translate }}</span>
+    <span>{{ post().commentsCount }} {{ 'postcard_comments' | translate }}</span>
+  </div>
+</article>

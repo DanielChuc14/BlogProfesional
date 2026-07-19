@@ -1,0 +1,63 @@
+<div class="max-w-6xl mx-auto px-4 py-8 flex gap-8">
+
+  <!-- Main feed -->
+  <section class="flex-1 min-w-0">
+    <!-- Tags filter -->
+    <div class="flex flex-wrap gap-2 mb-6">
+      <button
+        class="px-3 py-1.5 rounded-full text-sm font-medium transition-colors"
+        [class]="activeTag() === null ? 'bg-primary-600 text-white' : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'"
+        (click)="selectTag(null)">
+        {{ 'home_allPosts' | translate }}
+      </button>
+      @for (tag of tags(); track tag.id) {
+        <button
+          class="px-3 py-1.5 rounded-full text-sm font-medium transition-colors"
+          [class]="activeTag() === tag.slug ? 'bg-primary-600 text-white' : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'"
+          (click)="selectTag(tag.slug)">
+          {{ tag.name }}
+        </button>
+      }
+    </div>
+
+    <!-- Posts -->
+    @if (loading()) {
+      <app-spinner />
+    } @else if (posts().length === 0) {
+      <div class="text-center py-16 text-gray-400">
+        <p class="text-lg">{{ 'home_noPostsYet' | translate }}</p>
+      </div>
+    } @else {
+      <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        @for (post of posts(); track post.id) {
+          <app-post-card [post]="post" />
+        }
+      </div>
+
+      @if (hasMore()) {
+        <div class="mt-8 flex justify-center">
+          <button class="btn btn-secondary" (click)="loadMore()" [disabled]="loadingMore()">
+            @if (loadingMore()) { {{ 'common_loading' | translate }} } @else { {{ 'common_loadMore' | translate }} }
+          </button>
+        </div>
+      }
+    }
+  </section>
+
+  <!-- Sidebar -->
+  <aside class="hidden lg:block w-72 shrink-0">
+    <div class="card p-5 mb-4">
+      <h3 class="font-semibold text-gray-800 mb-3">{{ 'home_popularTags' | translate }}</h3>
+      <div class="flex flex-wrap gap-2">
+        @for (tag of tags().slice(0, 12); track tag.id) {
+          <a [routerLink]="['/tag', tag.slug]"
+             class="badge badge-gray no-underline hover:bg-gray-200 transition-colors">
+            {{ tag.name }}
+            <span class="ml-1 text-gray-400">{{ tag.postsCount }}</span>
+          </a>
+        }
+      </div>
+    </div>
+  </aside>
+
+</div>

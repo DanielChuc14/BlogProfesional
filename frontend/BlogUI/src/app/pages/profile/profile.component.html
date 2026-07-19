@@ -1,0 +1,462 @@
+@if (loading()) {
+  <app-spinner />
+} @else if (!profile()) {
+  <div class="max-w-3xl mx-auto px-4 py-16 text-center text-gray-400">
+    <p>{{ 'profile_userNotFound' | translate }}</p>
+  </div>
+} @else {
+  <div class="max-w-4xl mx-auto px-4 pb-10" [class]="fontClass">
+
+    <!-- Banner -->
+    <div class="relative group">
+      @if (profile()!.bannerUrl) {
+        <div class="w-full h-40 sm:h-56 overflow-hidden">
+          <img [src]="profile()!.bannerUrl" [alt]="profile()!.displayName + ' banner'"
+               class="w-full h-full object-cover" />
+        </div>
+      } @else {
+        <div class="w-full h-16 sm:h-24" style="background-color: var(--blog-primary, #0284c7)"></div>
+      }
+      @if (auth.isBlogger() && isOwner()) {
+        <label class="absolute bottom-2 right-2 btn btn-sm bg-black/50 text-white border-0 hover:bg-black/70 cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity">
+          @if (bannerSaving()) {
+            <app-spinner class="w-4 h-4" />
+          } @else {
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+            {{ 'profile_changeBanner' | translate }}
+          }
+          <input type="file" accept="image/*" class="hidden" (change)="onBannerSelected($event)" />
+        </label>
+      }
+    </div>
+
+    <!-- Profile header card -->
+    <div class="card px-6 pb-6 mb-6"
+         [class.mx-4]="!!profile()!.bannerUrl"
+         [class.mt-4]="!profile()!.bannerUrl">
+
+      <!-- Top row: avatar (protrudes up) + action buttons right -->
+      <div class="flex items-start justify-between">
+        <div class="relative shrink-0"
+             [class.-mt-10]="!!profile()!.bannerUrl"
+             [class.mt-6]="!profile()!.bannerUrl">
+          <div class="relative group/avatar">
+            <div class="w-20 h-20 rounded-full bg-primary-100 flex items-center justify-center text-3xl font-bold text-primary-600 overflow-hidden border-4 border-white shadow-md">
+              @if (profile()!.avatarUrl) {
+                <img [src]="profile()!.avatarUrl" [alt]="profile()!.displayName" class="w-20 h-20 object-cover" />
+              } @else {
+                {{ profile()!.displayName.charAt(0) }}
+              }
+            </div>
+            @if (isOwner()) {
+              <label class="absolute inset-0 rounded-full bg-black/40 flex items-center justify-center cursor-pointer opacity-0 group-hover/avatar:opacity-100 transition-opacity">
+                @if (avatarSaving()) {
+                  <app-spinner class="w-5 h-5 text-white" />
+                } @else {
+                  <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                }
+                <input type="file" accept="image/*" class="hidden" (change)="onAvatarSelected($event)" />
+              </label>
+            }
+          </div>
+          @if (profile()!.logoUrl) {
+            <img [src]="profile()!.logoUrl" [alt]="profile()!.displayName + ' logo'"
+                 class="absolute -bottom-2 -right-2 w-9 h-9 rounded-lg border-2 border-white shadow-sm object-cover bg-white" />
+          }
+        </div>
+
+        <!-- Action buttons: top-right, pushed below banner with pt -->
+        <div class="pt-3 flex flex-wrap gap-2 justify-end">
+          @if (auth.user()?.username === profile()!.username) {
+            <button class="btn btn-sm text-white font-semibold"
+                    style="background-color: var(--blog-primary, #0284c7)"
+                    (click)="openTheme()">{{ 'profile_customizeBlog' | translate }}</button>
+            <button class="btn btn-secondary btn-sm" (click)="openEdit()">{{ 'profile_editProfile' | translate }}</button>
+            <button class="btn btn-ghost btn-sm" (click)="openNotices()">{{ 'profile_notices' | translate }}</button>
+            <button class="btn btn-ghost btn-sm" (click)="openQuickLinks()">{{ 'profile_quickLinks' | translate }}</button>
+            <button class="btn btn-ghost btn-sm" (click)="openFilters()">{{ 'profile_wordFilters' | translate }}</button>
+          } @else if (auth.isLoggedIn()) {
+            @if (!profile()!.isBlocked) {
+              <button class="btn btn-sm"
+                [class]="profile()!.isFollowing ? 'btn-secondary' : 'btn-primary'"
+                [disabled]="followLoading()"
+                (click)="toggleFollow()">
+                {{ followLoading() ? '...' : (profile()!.isFollowing ? ('profile_following' | translate) : ('profile_follow' | translate)) }}
+              </button>
+            }
+            <button class="btn btn-sm btn-ghost text-red-500 border border-red-200"
+              [disabled]="blockLoading()"
+              (click)="toggleBlock()">
+              {{ blockLoading() ? '...' : (profile()!.isBlocked ? ('profile_unblock' | translate) : ('profile_block' | translate)) }}
+            </button>
+            <button class="btn btn-sm btn-ghost text-gray-400"
+              (click)="openReportModal()">
+              {{ 'profile_report' | translate }}
+            </button>
+          } @else {
+            <a routerLink="/login" class="btn btn-primary btn-sm no-underline">{{ 'profile_follow' | translate }}</a>
+          }
+        </div>
+      </div>
+
+      <!-- Text content: always below avatar, never on banner -->
+      <div class="mt-3 min-w-0">
+        <h1 class="text-2xl font-bold text-gray-900 leading-tight">{{ profile()!.displayName }}</h1>
+        <p class="text-gray-400 text-sm">&#64;{{ profile()!.username }}</p>
+
+        @if (profile()!.tagline) {
+          <p class="text-primary-600 font-medium text-sm mt-1 italic">{{ profile()!.tagline }}</p>
+        }
+
+        @if (profile()!.bio) {
+          <p class="text-gray-600 mt-2 text-sm leading-relaxed">{{ profile()!.bio }}</p>
+        }
+
+        <!-- Social links -->
+        @if (profile()!.socialLinks.length > 0) {
+          <div class="flex flex-wrap gap-3 mt-3">
+            @for (link of profile()!.socialLinks; track link.platform) {
+              <a [href]="link.url" target="_blank" rel="noopener noreferrer"
+                 class="text-xs text-primary-600 hover:underline no-underline font-medium">
+                {{ link.platform }}
+              </a>
+            }
+          </div>
+        }
+
+        <!-- Stats bar -->
+        <div class="flex items-center gap-6 mt-4 text-sm">
+          <a [routerLink]="['/profile', profile()!.username, 'followers']" class="no-underline hover:underline">
+            <strong class="text-gray-900">{{ profile()!.followersCount }}</strong>
+            <span class="text-gray-500 ml-1">{{ 'profile_followers' | translate }}</span>
+          </a>
+          <a [routerLink]="['/profile', profile()!.username, 'following']" class="no-underline hover:underline">
+            <strong class="text-gray-900">{{ profile()!.followingCount }}</strong>
+            <span class="text-gray-500 ml-1">{{ 'profile_followingCount' | translate }}</span>
+          </a>
+          <span>
+            <strong class="text-gray-900">{{ profile()!.postsCount }}</strong>
+            <span class="text-gray-500 ml-1">{{ 'profile_posts' | translate }}</span>
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Active Notices -->
+    @if (profile()!.activeNotices.length > 0) {
+      <div class="flex flex-col gap-2 mb-6">
+        @for (notice of profile()!.activeNotices; track notice.id) {
+          <div class="rounded-lg border-l-4 px-4 py-3 text-sm" [class]="noticeTypeClass(notice.type)">
+            <strong>{{ notice.title }}</strong>
+            @if (notice.content !== notice.title) {
+              <span class="ml-2 opacity-80">{{ notice.content }}</span>
+            }
+          </div>
+        }
+      </div>
+    }
+
+    <!-- Quick Links -->
+    @if (profile()!.quickLinks.length > 0) {
+      <div class="card p-4 mb-6">
+        <h3 class="text-sm font-semibold text-gray-700 mb-3">{{ 'profile_links' | translate }}</h3>
+        <div class="flex flex-wrap gap-2">
+          @for (link of profile()!.quickLinks; track link.id) {
+            <a [href]="link.url" target="_blank" rel="noopener noreferrer"
+               class="btn btn-secondary btn-sm no-underline text-xs">
+              @if (link.icon) { {{ link.icon }} &nbsp; }
+              {{ link.title }}
+            </a>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- Tabs -->
+    <div class="flex gap-1 mb-6 border-b border-gray-200">
+      <button class="px-4 py-2 text-sm font-medium transition-colors"
+        [class]="activeTab() === 'posts' ? 'text-primary-600 border-b-2 border-primary-600 -mb-px' : 'text-gray-500 hover:text-gray-700'"
+        (click)="setTab('posts')">
+        {{ 'profile_posts_tab' | translate }}
+      </button>
+      <button class="px-4 py-2 text-sm font-medium transition-colors"
+        [class]="activeTab() === 'about' ? 'text-primary-600 border-b-2 border-primary-600 -mb-px' : 'text-gray-500 hover:text-gray-700'"
+        (click)="setTab('about')">
+        {{ 'profile_about' | translate }}
+      </button>
+    </div>
+
+    <!-- Posts Tab -->
+    @if (activeTab() === 'posts') {
+      @if (postsLoading()) {
+        <app-spinner size="sm" wrapperClass="py-8" />
+      } @else if (posts().length === 0) {
+        <div class="text-center py-12 text-gray-400">
+          <p class="text-4xl mb-3">✍️</p>
+          <p class="text-sm">{{ 'profile_noPostsYet' | translate }}</p>
+        </div>
+      } @else {
+        <div [class]="postsGridClass">
+          @for (post of posts(); track post.id) {
+            <app-post-card [post]="post" />
+          }
+        </div>
+      }
+    }
+
+    <!-- About Tab -->
+    @if (activeTab() === 'about') {
+      <div class="card p-6">
+        @if (profile()!.about) {
+          <p class="text-gray-700 leading-relaxed whitespace-pre-wrap">{{ profile()!.about }}</p>
+        } @else {
+          <p class="text-gray-400 text-sm text-center py-4">{{ 'profile_noBioYet' | translate }}</p>
+        }
+      </div>
+    }
+
+    <!-- ── EDIT PROFILE PANEL ── -->
+    @if (editMode()) {
+      <div class="fixed inset-0 z-50 flex items-start justify-center bg-black/50 overflow-y-auto py-8 px-4">
+        <div class="bg-white rounded-2xl w-full max-w-lg shadow-2xl p-6">
+          <h2 class="text-lg font-semibold text-gray-900 mb-5">{{ 'profile_editProfile' | translate }}</h2>
+          <div class="flex flex-col gap-4">
+            <div>
+              <label class="label">{{ 'profile_displayName' | translate }}</label>
+              <input type="text" class="input" [(ngModel)]="editDisplayName" name="editDisplayName" />
+            </div>
+            <div>
+              <label class="label">{{ 'profile_tagline' | translate }}</label>
+              <input type="text" class="input" [(ngModel)]="editTagline" name="editTagline" />
+            </div>
+            <div>
+              <label class="label">{{ 'profile_bio' | translate }} <span class="text-gray-400 font-normal">{{ 'profile_bioShort' | translate }}</span></label>
+              <textarea class="input resize-none" rows="2" [(ngModel)]="editBio" name="editBio"></textarea>
+            </div>
+            <div>
+              <label class="label">{{ 'profile_about' | translate }} <span class="text-gray-400 font-normal">{{ 'profile_bioExtended' | translate }}</span></label>
+              <textarea class="input resize-y" rows="4" [(ngModel)]="editAbout" name="editAbout"></textarea>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label class="label">{{ 'profile_website' | translate }}</label>
+                <input type="url" class="input" [(ngModel)]="editWebsite" name="editWebsite" placeholder="https://..." />
+              </div>
+              <div>
+                <label class="label">Twitter / X</label>
+                <input type="url" class="input" [(ngModel)]="editTwitter" name="editTwitter" placeholder="https://x.com/..." />
+              </div>
+              <div>
+                <label class="label">LinkedIn</label>
+                <input type="url" class="input" [(ngModel)]="editLinkedIn" name="editLinkedIn" placeholder="https://linkedin.com/in/..." />
+              </div>
+              <div>
+                <label class="label">GitHub</label>
+                <input type="url" class="input" [(ngModel)]="editGitHub" name="editGitHub" placeholder="https://github.com/..." />
+              </div>
+            </div>
+            <div class="flex gap-2 pt-2">
+              <button class="btn btn-primary btn-sm" [disabled]="saving()" (click)="saveEdit()">
+                @if (saving()) { {{ 'profile_saving' | translate }} } @else { {{ 'profile_saveChanges' | translate }} }
+              </button>
+              <button class="btn btn-secondary btn-sm" [disabled]="saving()" (click)="cancelEdit()">{{ 'common_cancel' | translate }}</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- ── THEME PANEL ── -->
+    @if (themeMode()) {
+      <div class="fixed inset-0 z-50 flex items-start justify-center bg-black/50 overflow-y-auto py-8 px-4">
+        <div class="bg-white rounded-2xl w-full max-w-lg shadow-2xl p-6">
+          <h2 class="text-lg font-semibold text-gray-900 mb-5">{{ 'profile_blogAppearance' | translate }}</h2>
+          <div class="flex flex-col gap-4">
+            <div class="grid grid-cols-3 gap-4">
+              <div>
+                <label class="label">{{ 'profile_primaryColor' | translate }}</label>
+                <input type="color" class="w-full h-10 rounded cursor-pointer border border-gray-300"
+                  [(ngModel)]="editPrimaryColor" name="primaryColor" />
+              </div>
+              <div>
+                <label class="label">{{ 'profile_secondaryColor' | translate }}</label>
+                <input type="color" class="w-full h-10 rounded cursor-pointer border border-gray-300"
+                  [(ngModel)]="editSecondaryColor" name="secondaryColor" />
+              </div>
+              <div>
+                <label class="label">{{ 'profile_accentColor' | translate }}</label>
+                <input type="color" class="w-full h-10 rounded cursor-pointer border border-gray-300"
+                  [(ngModel)]="editAccentColor" name="accentColor" />
+              </div>
+            </div>
+            <div>
+              <label class="label">{{ 'profile_fontFamily' | translate }}</label>
+              <select class="input" [(ngModel)]="editFontFamily" name="fontFamily">
+                <option value="sans">Sans-serif (Inter)</option>
+                <option value="serif">Serif (Georgia)</option>
+                <option value="mono">Monospace (JetBrains Mono)</option>
+              </select>
+            </div>
+            <div>
+              <label class="label">{{ 'profile_postLayout' | translate }}</label>
+              <select class="input" [(ngModel)]="editLayoutStyle" name="layoutStyle">
+                <option value="grid">Grid cards</option>
+                <option value="list">Compact list</option>
+                <option value="magazine">Magazine</option>
+              </select>
+            </div>
+            <div class="flex items-center gap-3">
+              <input type="checkbox" id="darkModeDefault" [(ngModel)]="editDarkMode" name="darkMode" class="w-4 h-4 rounded" />
+              <label for="darkModeDefault" class="label mb-0">{{ 'profile_darkModeDefault' | translate }}</label>
+            </div>
+            <div class="flex gap-2 pt-2">
+              <button class="btn btn-primary btn-sm" [disabled]="themeSaving()" (click)="saveTheme()">
+                @if (themeSaving()) { {{ 'profile_saving' | translate }} } @else { {{ 'profile_saveAppearance' | translate }} }
+              </button>
+              <button class="btn btn-secondary btn-sm" [disabled]="themeSaving()" (click)="cancelTheme()">{{ 'common_cancel' | translate }}</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- ── NOTICES PANEL ── -->
+    @if (noticesMode()) {
+      <div class="fixed inset-0 z-50 flex items-start justify-center bg-black/50 overflow-y-auto py-8 px-4">
+        <div class="bg-white rounded-2xl w-full max-w-lg shadow-2xl p-6">
+          <div class="flex items-center justify-between mb-5">
+            <h2 class="text-lg font-semibold text-gray-900">{{ 'profile_noticesTitle' | translate }}</h2>
+            <button class="btn btn-ghost btn-sm" (click)="closeNotices()">{{ 'common_close' | translate }}</button>
+          </div>
+
+          <div class="flex flex-col gap-3 mb-6">
+            <input type="text" class="input" placeholder="Notice title..." [(ngModel)]="newNoticeTitle" name="noticeTitle" />
+            <textarea class="input resize-none" rows="2" placeholder="Notice content..." [(ngModel)]="newNoticeContent" name="noticeContent"></textarea>
+            <div class="flex gap-3">
+              <select class="input" [(ngModel)]="newNoticeType" name="noticeType">
+                <option value="Info">Info</option>
+                <option value="Warning">Warning</option>
+                <option value="Success">Success</option>
+                <option value="Promo">Promo</option>
+              </select>
+              <label class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
+                <input type="checkbox" [(ngModel)]="newNoticeActive" name="noticeActive" class="w-4 h-4 rounded" />
+                Active
+              </label>
+            </div>
+            <button class="btn btn-primary btn-sm self-start" [disabled]="noticeSaving()" (click)="addNotice()">
+              @if (noticeSaving()) { {{ 'profile_saving' | translate }} } @else { {{ 'profile_addNotice' | translate }} }
+            </button>
+          </div>
+
+          @if (noticesLoading()) {
+            <app-spinner size="sm" wrapperClass="py-4" />
+          } @else if (notices().length === 0) {
+            <p class="text-gray-400 text-sm text-center py-4">{{ 'profile_noNoticesYet' | translate }}</p>
+          } @else {
+            <div class="flex flex-col gap-2">
+              @for (notice of notices(); track notice.id) {
+                <div class="flex items-start gap-3 rounded-lg border px-3 py-2" [class]="noticeTypeClass(notice.type)">
+                  <div class="flex-1 min-w-0">
+                    <p class="text-sm font-semibold">{{ notice.title }}</p>
+                    <p class="text-xs opacity-80">{{ notice.content }}</p>
+                  </div>
+                  <span class="badge badge-gray text-xs">{{ notice.type }}</span>
+                  <button class="btn btn-danger btn-sm text-xs px-2 py-1" (click)="deleteNotice(notice.id)">{{ 'common_delete' | translate }}</button>
+                </div>
+              }
+            </div>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- ── QUICK LINKS PANEL ── -->
+    @if (quickLinksMode()) {
+      <div class="fixed inset-0 z-50 flex items-start justify-center bg-black/50 overflow-y-auto py-8 px-4">
+        <div class="bg-white rounded-2xl w-full max-w-lg shadow-2xl p-6">
+          <div class="flex items-center justify-between mb-5">
+            <h2 class="text-lg font-semibold text-gray-900">{{ 'profile_quickLinksTitle' | translate }}</h2>
+            <button class="btn btn-ghost btn-sm" (click)="closeQuickLinks()">{{ 'common_close' | translate }}</button>
+          </div>
+
+          <div class="flex flex-col gap-3 mb-6">
+            <input type="text" class="input" placeholder="Label (e.g. My Portfolio)" [(ngModel)]="newLinkTitle" name="linkTitle" />
+            <input type="url"  class="input" placeholder="URL (https://...)" [(ngModel)]="newLinkUrl" name="linkUrl" />
+            <input type="text" class="input" placeholder="Icon emoji (optional, e.g. 🌐)" [(ngModel)]="newLinkIcon" name="linkIcon" />
+            <button class="btn btn-primary btn-sm self-start" [disabled]="linkSaving()" (click)="addQuickLink()">
+              @if (linkSaving()) { {{ 'profile_saving' | translate }} } @else { {{ 'profile_addLink' | translate }} }
+            </button>
+          </div>
+
+          @if (profile()!.quickLinks.length === 0) {
+            <p class="text-gray-400 text-sm text-center py-4">{{ 'profile_noQuickLinks' | translate }}</p>
+          } @else {
+            <div class="flex flex-col gap-2">
+              @for (link of profile()!.quickLinks; track link.id) {
+                <div class="flex items-center gap-3 rounded-lg border border-gray-200 px-3 py-2">
+                  @if (link.icon) { <span class="text-lg">{{ link.icon }}</span> }
+                  <div class="flex-1 min-w-0">
+                    <p class="text-sm font-medium">{{ link.title }}</p>
+                    <p class="text-xs text-gray-400 truncate">{{ link.url }}</p>
+                  </div>
+                  <button class="btn btn-danger btn-sm text-xs px-2 py-1" (click)="deleteQuickLink(link.id)">{{ 'common_delete' | translate }}</button>
+                </div>
+              }
+            </div>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- ── WORD FILTERS PANEL ── -->
+    @if (filtersMode()) {
+      <div class="fixed inset-0 z-50 flex items-start justify-center bg-black/50 overflow-y-auto py-8 px-4">
+        <div class="bg-white rounded-2xl w-full max-w-lg shadow-2xl p-6">
+          <div class="flex items-center justify-between mb-5">
+            <h2 class="text-lg font-semibold text-gray-900">{{ 'profile_wordFiltersTitle' | translate }}</h2>
+            <button class="btn btn-ghost btn-sm" (click)="closeFilters()">{{ 'common_close' | translate }}</button>
+          </div>
+          <p class="text-sm text-gray-500 mb-5">{{ 'profile_wordFiltersDesc' | translate }}</p>
+
+          <div class="flex gap-2 mb-6">
+            <input type="text" class="input flex-1" placeholder="Word or phrase to filter..."
+              [(ngModel)]="newFilterWord" name="filterWord" />
+            <button class="btn btn-primary btn-sm" [disabled]="filterSaving()" (click)="addWordFilter()">
+              @if (filterSaving()) { {{ 'profile_adding' | translate }} } @else { {{ 'profile_addWordFilter' | translate }} }
+            </button>
+          </div>
+
+          @if (filtersLoading()) {
+            <app-spinner size="sm" wrapperClass="py-4" />
+          } @else if (wordFilters().length === 0) {
+            <p class="text-gray-400 text-sm text-center py-4">{{ 'profile_noWordFilters' | translate }}</p>
+          } @else {
+            <div class="flex flex-wrap gap-2">
+              @for (filter of wordFilters(); track filter.id) {
+                <span class="badge badge-gray flex items-center gap-1.5 text-sm py-1 px-3">
+                  {{ filter.word }}
+                  <button class="hover:text-red-600 transition-colors ml-1 font-bold" (click)="deleteWordFilter(filter.id)">&times;</button>
+                </span>
+              }
+            </div>
+          }
+        </div>
+      </div>
+    }
+
+  </div>
+}
+
+@if (showReportModal() && profile()) {
+  <app-report-modal
+    targetType="User"
+    [targetId]="profile()!.userId"
+    (closed)="closeReportModal()" />
+}

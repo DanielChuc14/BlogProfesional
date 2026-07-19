@@ -1,0 +1,229 @@
+<header class="sticky top-0 z-40 bg-white border-b border-gray-200 shadow-sm">
+  <div class="max-w-6xl mx-auto px-4 h-14 flex items-center justify-between gap-4">
+
+    <a routerLink="/" class="text-xl font-bold text-primary-600 no-underline shrink-0">
+      BlogPlatform
+    </a>
+
+    <nav class="hidden md:flex items-center gap-1">
+      <a routerLink="/" routerLinkActive="text-primary-600 bg-primary-50"
+         [routerLinkActiveOptions]="{ exact: true }"
+         class="px-3 py-1.5 rounded-md text-sm font-medium text-gray-600 hover:bg-gray-100 transition-colors no-underline">
+        {{ 'nav_home' | translate }}
+      </a>
+      @if (auth.isLoggedIn()) {
+        <a routerLink="/feed" routerLinkActive="text-primary-600 bg-primary-50"
+           class="px-3 py-1.5 rounded-md text-sm font-medium text-gray-600 hover:bg-gray-100 transition-colors no-underline">
+          {{ 'nav_feed' | translate }}
+        </a>
+        @if (auth.isBlogger()) {
+          <a [routerLink]="['/profile', auth.user()!.username]" routerLinkActive="text-primary-600 bg-primary-50"
+             class="px-3 py-1.5 rounded-md text-sm font-medium text-gray-600 hover:bg-gray-100 transition-colors no-underline">
+            {{ 'nav_myBlog' | translate }}
+          </a>
+          <a routerLink="/settings" routerLinkActive="text-primary-600 bg-primary-50"
+             class="px-3 py-1.5 rounded-md text-sm font-medium text-gray-600 hover:bg-gray-100 transition-colors no-underline">
+            {{ 'nav_settings' | translate }}
+          </a>
+        }
+      }
+      @if (auth.isAdmin()) {
+        <a routerLink="/admin" routerLinkActive="text-primary-600 bg-primary-50"
+           class="px-3 py-1.5 rounded-md text-sm font-medium text-gray-600 hover:bg-gray-100 transition-colors no-underline">
+          {{ 'nav_admin' | translate }}
+        </a>
+      }
+    </nav>
+
+    <form class="hidden md:flex items-center flex-1 max-w-xs" (ngSubmit)="submitSearch()">
+      <input type="search" class="input py-1 text-sm w-full"
+        [placeholder]="'nav_searchPlaceholder' | translate"
+        [(ngModel)]="searchQuery" name="headerSearch" />
+    </form>
+
+    <div class="flex items-center gap-1">
+
+      <!-- Language switcher -->
+      <div class="hidden sm:flex items-center gap-0.5 text-xs font-semibold mr-1">
+        @for (lang of langSvc.activeLanguages(); track lang.code; let last = $last) {
+          <button class="px-1.5 py-0.5 rounded transition-colors"
+                  [class.text-primary-600]="t.currentLang() === lang.code"
+                  [class.text-gray-400]="t.currentLang() !== lang.code"
+                  (click)="setLang(lang.code)">{{ lang.code.toUpperCase() }}</button>
+          @if (!last) { <span class="text-gray-300">|</span> }
+        }
+      </div>
+
+      <!-- Dark mode toggle -->
+      <button class="btn btn-ghost btn-sm px-2" (click)="toggleDarkMode()" title="Toggle dark mode">
+        @if (darkMode()) {
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+          </svg>
+        } @else {
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+          </svg>
+        }
+      </button>
+
+      @if (auth.isLoggedIn()) {
+        @if (auth.isBlogger()) {
+          <a routerLink="/editor" class="btn btn-primary btn-sm hidden sm:inline-flex no-underline">
+            {{ 'nav_write' | translate }}
+          </a>
+        }
+
+        <!-- Notifications bell -->
+        <div class="relative notif-panel-wrapper">
+          <button class="relative btn btn-ghost btn-sm px-2" (click)="toggleNotifications()">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+            </svg>
+            @if (notifSvc.unreadCount() > 0) {
+              <span class="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center leading-none">
+                {{ notifSvc.unreadCount() > 99 ? '99+' : notifSvc.unreadCount() }}
+              </span>
+            }
+          </button>
+
+          @if (notifOpen()) {
+            <div class="absolute right-0 top-10 w-80 bg-white border border-gray-200 rounded-xl shadow-lg z-50 overflow-hidden">
+              <div class="flex items-center justify-between px-4 py-3 border-b border-gray-100">
+                <span class="text-sm font-semibold text-gray-900">{{ 'nav_notifications' | translate }}</span>
+                @if (notifSvc.unreadCount() > 0) {
+                  <button class="text-xs text-primary-600 hover:underline" (click)="markAllRead()">{{ 'nav_markAllRead' | translate }}</button>
+                }
+              </div>
+
+              @if (notifLoading()) {
+                <div class="py-6 text-center text-sm text-gray-400">{{ 'common_loading' | translate }}</div>
+              } @else if (notifications().length === 0) {
+                <div class="py-8 text-center text-sm text-gray-400">{{ 'nav_noNotifications' | translate }}</div>
+              } @else {
+                <ul class="divide-y divide-gray-100 max-h-80 overflow-y-auto">
+                  @for (n of notifications(); track n.id) {
+                    <li class="px-4 py-3 hover:bg-gray-50 transition-colors"
+                        [class.bg-blue-50]="!n.isRead">
+                      <div class="flex items-start gap-2">
+                        <div class="w-7 h-7 rounded-full bg-primary-100 flex items-center justify-center text-xs font-semibold text-primary-600 shrink-0 mt-0.5">
+                          {{ n.actorDisplayName.charAt(0) }}
+                        </div>
+                        <div class="flex-1 min-w-0">
+                          <p class="text-sm text-gray-800 leading-snug">
+                            <strong>{{ n.actorDisplayName }}</strong> {{ notifLabel(n.type) }}
+                          </p>
+                          @if (n.postTitle) {
+                            <p class="text-xs text-gray-500 truncate mt-0.5">"{{ n.postTitle }}"</p>
+                          }
+                        </div>
+                        @if (!n.isRead) {
+                          <span class="w-2 h-2 rounded-full bg-blue-500 shrink-0 mt-1.5"></span>
+                        }
+                      </div>
+                    </li>
+                  }
+                </ul>
+              }
+            </div>
+          }
+        </div>
+
+        <!-- Avatar dropdown -->
+        <div class="relative user-menu-wrapper">
+          <button class="w-8 h-8 rounded-full overflow-hidden border-2 border-gray-200 hover:border-primary-400 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 shrink-0"
+                  (click)="toggleUserMenu()">
+            @if (auth.user()?.avatarUrl) {
+              <img [src]="auth.user()!.avatarUrl" alt="Avatar" class="w-full h-full object-cover" />
+            } @else {
+              <div class="w-full h-full bg-primary-100 flex items-center justify-center text-sm font-semibold text-primary-600">
+                {{ auth.user()!.displayName.charAt(0) }}
+              </div>
+            }
+          </button>
+
+          @if (userMenuOpen()) {
+            <div class="absolute right-0 top-10 w-44 bg-white border border-gray-200 rounded-xl shadow-lg z-50 overflow-hidden py-1">
+              <a [routerLink]="['/profile', auth.user()!.username]"
+                 class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 no-underline"
+                 (click)="userMenuOpen.set(false)">
+                {{ 'nav_viewProfile' | translate }}
+              </a>
+              <div class="border-t border-gray-100 my-1"></div>
+              <button class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                      (click)="doLogout()">
+                {{ 'nav_signOut' | translate }}
+              </button>
+            </div>
+          }
+        </div>
+
+      } @else {
+        <a routerLink="/login" class="btn btn-secondary btn-sm no-underline hidden sm:inline-flex">{{ 'nav_signIn' | translate }}</a>
+        <a routerLink="/register" class="btn btn-primary btn-sm no-underline">{{ 'nav_getStarted' | translate }}</a>
+      }
+
+      <!-- Mobile hamburger -->
+      <button class="btn btn-ghost btn-sm px-2 md:hidden" (click)="toggleMobileMenu()">
+        @if (mobileMenuOpen()) {
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        } @else {
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+        }
+      </button>
+    </div>
+  </div>
+
+  <!-- Mobile menu -->
+  @if (mobileMenuOpen()) {
+    <div class="md:hidden border-t border-gray-200 bg-white">
+      <div class="px-4 py-3 flex flex-col gap-1">
+        <a routerLink="/" (click)="toggleMobileMenu()"
+           class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100 no-underline">{{ 'nav_home' | translate }}</a>
+        @if (auth.isLoggedIn()) {
+          <a routerLink="/feed" (click)="toggleMobileMenu()"
+             class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100 no-underline">{{ 'nav_feed' | translate }}</a>
+          <a [routerLink]="['/profile', auth.user()!.username]" (click)="toggleMobileMenu()"
+             class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100 no-underline">{{ 'nav_viewProfile' | translate }}</a>
+          @if (auth.isBlogger()) {
+            <a routerLink="/editor" (click)="toggleMobileMenu()"
+               class="px-3 py-2 rounded-md text-sm font-medium text-primary-600 hover:bg-primary-50 no-underline">{{ 'nav_write' | translate }}</a>
+            <a [routerLink]="['/profile', auth.user()!.username]" (click)="toggleMobileMenu()"
+               class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100 no-underline">{{ 'nav_myBlog' | translate }}</a>
+            <a routerLink="/settings" (click)="toggleMobileMenu()"
+               class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100 no-underline">{{ 'nav_settings' | translate }}</a>
+          }
+          @if (auth.isAdmin()) {
+            <a routerLink="/admin" (click)="toggleMobileMenu()"
+               class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100 no-underline">{{ 'nav_admin' | translate }}</a>
+          }
+          <!-- Language switcher mobile -->
+          <div class="flex items-center gap-2 px-3 py-2 text-sm font-semibold text-gray-700">
+            @for (lang of langSvc.activeLanguages(); track lang.code; let last = $last) {
+              <button [class.text-primary-600]="t.currentLang() === lang.code"
+                      [class.text-gray-400]="t.currentLang() !== lang.code"
+                      (click)="setLang(lang.code)">{{ lang.code.toUpperCase() }}</button>
+              @if (!last) { <span class="text-gray-300">|</span> }
+            }
+          </div>
+          <button (click)="doLogout(); toggleMobileMenu();"
+             class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100 text-left">{{ 'nav_signOut' | translate }}</button>
+        } @else {
+          <a routerLink="/login" (click)="toggleMobileMenu()"
+             class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100 no-underline">{{ 'nav_signIn' | translate }}</a>
+          <a routerLink="/register" (click)="toggleMobileMenu()"
+             class="px-3 py-2 rounded-md text-sm font-medium text-primary-600 hover:bg-primary-50 no-underline">{{ 'nav_getStarted' | translate }}</a>
+        }
+        <form class="mt-2" (ngSubmit)="submitSearch(); toggleMobileMenu();">
+          <input type="search" class="input text-sm w-full"
+            [placeholder]="'nav_searchPlaceholder' | translate"
+            [(ngModel)]="searchQuery" name="mobileSearch" />
+        </form>
+      </div>
+    </div>
+  }
+</header>

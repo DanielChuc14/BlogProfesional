@@ -1,0 +1,54 @@
+<div class="max-w-2xl mx-auto px-4 py-8">
+
+  <!-- Back + Title -->
+  <div class="flex items-center gap-3 mb-6">
+    <a [routerLink]="['/profile', username()]" class="btn btn-ghost btn-sm no-underline">&larr; {{ 'common_back' | translate }}</a>
+    <h1 class="text-xl font-bold text-gray-900">
+      @if (listType() === 'followers') {
+        {{ 'followList_followersOf' | translate }} &#64;{{ username() }}
+      } @else {
+        {{ 'followList_followingOf' | translate }} &#64;{{ username() }}
+      }
+    </h1>
+  </div>
+
+  @if (loading()) {
+    <app-spinner wrapperClass="py-16" />
+  } @else if (items().length === 0) {
+    <div class="text-center py-16 text-gray-400">
+      <p class="text-sm">{{ 'followList_noOne' | translate }}</p>
+    </div>
+  } @else {
+    <div class="flex flex-col gap-3">
+      @for (item of items(); track item.userId) {
+        <a [routerLink]="['/profile', item.username]"
+           class="flex items-center gap-4 p-4 rounded-xl border border-gray-200 hover:border-primary-300 hover:bg-gray-50 transition-colors no-underline">
+
+          <!-- Avatar -->
+          <div class="w-12 h-12 rounded-full bg-primary-100 flex items-center justify-center text-lg font-bold text-primary-600 overflow-hidden shrink-0">
+            @if (item.avatarUrl) {
+              <img [src]="item.avatarUrl" [alt]="item.displayName" class="w-12 h-12 object-cover" />
+            } @else {
+              {{ item.displayName.charAt(0) }}
+            }
+          </div>
+
+          <!-- Info -->
+          <div class="min-w-0">
+            <p class="font-semibold text-gray-900 leading-tight truncate">{{ item.displayName }}</p>
+            <p class="text-sm text-gray-400 truncate">&#64;{{ item.username }}</p>
+          </div>
+        </a>
+      }
+    </div>
+
+    @if (hasMore()) {
+      <div class="text-center mt-6">
+        <button class="btn btn-secondary btn-sm" [disabled]="loadingMore()" (click)="loadMore()">
+          @if (loadingMore()) { {{ 'common_loading' | translate }} } @else { {{ 'common_loadMore' | translate }} }
+        </button>
+      </div>
+    }
+  }
+
+</div>

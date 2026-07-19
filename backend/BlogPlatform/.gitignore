@@ -1,0 +1,62 @@
+# Build output
+bin/
+obj/
+out/
+
+# Visual Studio / Rider
+.vs/
+.idea/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.userprefs
+
+# NuGet
+*.nupkg
+*.snupkg
+.nuget/
+packages/
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+# Entity Framework migrations (compiled artifacts only — keep *.cs)
+*.dll
+
+# Logs (generados por log4net en runtime)
+Logs/
+
+# Uploads locales
+uploads/
+uploads-test/
+
+# Runtime / temp
+*.pid
+*.seed
+*.pid.lock
+
+# Secrets & environment
+appsettings.Production.json
+appsettings.*.local.json
+# Configuración de tests de integración (contiene credenciales de DB local)
+BlogPlatform.IntegrationTests/appsettings.Testing.json
+*.pfx
+*.p12
+secrets.json
+.env
+.env.*
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Test results
+TestResults/
+coverage/
+*.coverage
+*.coveragexml
+
+# Publish output
+publish/

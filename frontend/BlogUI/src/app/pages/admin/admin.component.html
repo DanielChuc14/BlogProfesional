@@ -1,0 +1,965 @@
+<div class="max-w-7xl mx-auto px-4 py-8">
+
+  <h1 class="text-2xl font-bold text-gray-900 mb-6">{{ 'admin_title' | translate }}</h1>
+
+  <div class="flex flex-col md:flex-row gap-6">
+
+    <!-- ── SIDEBAR ──────────────────────────────────────────────────── -->
+    <nav class="md:w-52 md:shrink-0">
+      <div class="flex md:flex-col overflow-x-auto md:overflow-visible gap-1
+                  border-b md:border-b-0 md:border-r border-gray-200
+                  pb-3 md:pb-0 md:pr-4">
+        @for (tab of tabs; track tab.id) {
+          <button
+            class="flex items-center px-3 py-2.5 rounded-lg text-sm font-medium
+                   whitespace-nowrap transition-colors text-left w-full"
+            [class]="activeTab() === tab.id
+              ? 'bg-primary-50 text-primary-700'
+              : 'text-gray-600 hover:bg-gray-100 hover:text-gray-800'"
+            (click)="setTab(tab.id)">
+            {{ tab.label | translate }}
+          </button>
+        }
+      </div>
+    </nav>
+
+    <!-- ── CONTENIDO ─────────────────────────────────────────────────── -->
+    <div class="flex-1 min-w-0">
+
+      <!-- ── TAB: Dashboard ──────────────────────────────────────────── -->
+      @if (activeTab() === 'dashboard') {
+        @if (statsLoading()) {
+          <app-spinner />
+        } @else if (!stats()) {
+          <p class="text-gray-400">{{ 'admin_noData' | translate }}</p>
+        } @else {
+          <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            <div class="card p-5">
+              <p class="text-xs text-gray-500 uppercase tracking-wide">{{ 'admin_totalUsers' | translate }}</p>
+              <p class="text-3xl font-bold text-gray-900 mt-1">{{ stats()!.totalUsers | number }}</p>
+              <p class="text-xs text-green-600 mt-1">+{{ stats()!.newUsersLast30Days }} {{ 'dashboard_last30d' | translate }}</p>
+            </div>
+            <div class="card p-5">
+              <p class="text-xs text-gray-500 uppercase tracking-wide">{{ 'admin_totalPosts' | translate }}</p>
+              <p class="text-3xl font-bold text-gray-900 mt-1">{{ stats()!.totalPosts | number }}</p>
+              <p class="text-xs text-green-600 mt-1">+{{ stats()!.newPostsLast30Days }} {{ 'dashboard_last30d' | translate }}</p>
+            </div>
+            <div class="card p-5">
+              <p class="text-xs text-gray-500 uppercase tracking-wide">{{ 'admin_pageViews' | translate }}</p>
+              <p class="text-3xl font-bold text-gray-900 mt-1">{{ stats()!.totalPageViews | number }}</p>
+              <p class="text-xs text-green-600 mt-1">{{ stats()!.pageViewsLast30Days | number }} {{ 'dashboard_last30d' | translate }}</p>
+            </div>
+            <div class="card p-5">
+              <p class="text-xs text-gray-500 uppercase tracking-wide">{{ 'admin_totalComments' | translate }}</p>
+              <p class="text-3xl font-bold text-gray-900 mt-1">{{ stats()!.totalComments | number }}</p>
+            </div>
+          </div>
+          <div class="card p-5 text-sm text-gray-500">
+            <strong class="text-gray-800">{{ stats()!.activeBloggers }}</strong> {{ 'admin_activeBloggers' | translate }}
+          </div>
+        }
+      }
+
+      <!-- ── TAB: Users ──────────────────────────────────────────────── -->
+      @if (activeTab() === 'users') {
+        <div class="flex gap-3 mb-4">
+          <input type="text" class="input flex-1 max-w-sm" [placeholder]="'admin_searchPlaceholder' | translate"
+            [(ngModel)]="userSearch" (keydown.enter)="searchUsers()" />
+          <button class="btn btn-secondary" (click)="searchUsers()">{{ 'admin_search' | translate }}</button>
+        </div>
+
+        @if (usersLoading()) {
+          <app-spinner />
+        } @else {
+          <div class="card overflow-hidden">
+            <table class="w-full text-sm">
+              <thead class="bg-gray-50 border-b border-gray-200">
+                <tr>
+                  <th class="text-left px-4 py-3 font-medium text-gray-600">{{ 'admin_colUser' | translate }}</th>
+                  <th class="text-left px-4 py-3 font-medium text-gray-600">{{ 'admin_colEmail' | translate }}</th>
+                  <th class="text-left px-4 py-3 font-medium text-gray-600">{{ 'admin_colRoles' | translate }}</th>
+                  <th class="text-left px-4 py-3 font-medium text-gray-600">{{ 'admin_colStatus' | translate }}</th>
+                  <th class="text-right px-4 py-3 font-medium text-gray-600">{{ 'admin_colActions' | translate }}</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-100">
+                @for (user of users(); track user.id) {
+                  <tr class="hover:bg-gray-50 transition-colors">
+                    <td class="px-4 py-3">
+                      <p class="font-medium text-gray-800">{{ user.displayName }}</p>
+                      <p class="text-xs text-gray-400">&#64;{{ user.username }}</p>
+                    </td>
+                    <td class="px-4 py-3 text-gray-600">{{ user.email }}</td>
+                    <td class="px-4 py-3">
+                      <div class="flex flex-wrap gap-1">
+                        @for (role of user.roles; track role) {
+                          <span class="badge badge-blue text-xs">{{ role }}</span>
+                        }
+                      </div>
+                    </td>
+                    <td class="px-4 py-3">
+                      @if (user.isActive) {
+                        @if (isSuspended(user)) {
+                          <span class="badge badge-yellow">{{ 'admin_statusSuspended' | translate }}</span>
+                        } @else {
+                          <span class="badge badge-green">{{ 'admin_statusActive' | translate }}</span>
+                        }
+                      } @else {
+                        <span class="badge badge-red">{{ 'admin_statusBanned' | translate }}</span>
+                      }
+                    </td>
+                    <td class="px-4 py-3">
+                      <div class="flex justify-end gap-2">
+                        @if (user.roles.includes('Reader') && !user.roles.includes('SuperAdmin')) {
+                          <button class="btn btn-ghost btn-sm text-primary-600"
+                            (click)="changeUserRole(user, 'Blogger')">
+                            {{ 'admin_makeBlogger' | translate }}
+                          </button>
+                        } @else if (user.roles.includes('Blogger') && !user.roles.includes('Admin') && !user.roles.includes('SuperAdmin')) {
+                          <button class="btn btn-ghost btn-sm text-gray-500"
+                            (click)="changeUserRole(user, 'Reader')">
+                            {{ 'admin_makeReader' | translate }}
+                          </button>
+                        }
+                        <button class="btn btn-ghost btn-sm" (click)="openUserDetail(user)">
+                          {{ 'admin_manageRoles' | translate }}
+                        </button>
+                        @if (user.isActive) {
+                          <button class="btn btn-ghost btn-sm text-yellow-600" (click)="banUser(user)">
+                            {{ 'admin_ban' | translate }}
+                          </button>
+                        } @else {
+                          <button class="btn btn-ghost btn-sm text-green-600" (click)="unbanUser(user)">
+                            {{ 'admin_unban' | translate }}
+                          </button>
+                        }
+                        <button class="btn btn-ghost btn-sm text-orange-600" (click)="openSuspendModal(user)">
+                          {{ 'admin_suspend' | translate }}
+                        </button>
+                        <button class="btn btn-ghost btn-sm text-red-600" (click)="confirmDeleteUser(user)">
+                          {{ 'common_delete' | translate }}
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                }
+                @empty {
+                  <tr>
+                    <td colspan="5" class="px-4 py-8 text-center text-gray-400">{{ 'admin_noUsersFound' | translate }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+
+          @if (usersTotalPages() > 1) {
+            <div class="flex justify-center gap-2 mt-4">
+              <button class="btn btn-ghost btn-sm" [disabled]="usersPage() === 1" (click)="usersGoToPage(usersPage() - 1)">
+                {{ 'admin_previous' | translate }}
+              </button>
+              <span class="px-3 py-1.5 text-sm text-gray-600">{{ usersPage() }} / {{ usersTotalPages() }}</span>
+              <button class="btn btn-ghost btn-sm" [disabled]="usersPage() === usersTotalPages()" (click)="usersGoToPage(usersPage() + 1)">
+                {{ 'admin_next' | translate }}
+              </button>
+            </div>
+          }
+        }
+
+        @if (selectedUser()) {
+          <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4">
+            <div class="bg-white rounded-xl shadow-xl w-full max-w-md p-6">
+              <h3 class="font-semibold text-gray-800 mb-1">{{ 'admin_manageRolesTitle' | translate }}</h3>
+              <p class="text-sm text-gray-500 mb-4">&#64;{{ selectedUser()!.username }}</p>
+
+              <div class="flex flex-wrap gap-2 mb-4">
+                @for (role of selectedUser()!.roles; track role) {
+                  <span class="badge badge-blue flex items-center gap-1">
+                    {{ role }}
+                    <button class="hover:text-red-300 ml-1" (click)="removeRoleFromUser(role)">&times;</button>
+                  </span>
+                }
+              </div>
+
+              <div class="flex gap-2 mb-4">
+                <select class="input flex-1" [(ngModel)]="roleToAssign">
+                  <option value="">{{ 'admin_selectRole' | translate }}</option>
+                  @for (role of roles(); track role.name) {
+                    <option [value]="role.name">{{ role.name }}</option>
+                  }
+                </select>
+                <button class="btn btn-primary btn-sm" [disabled]="!roleToAssign" (click)="assignRoleToUser()">
+                  {{ 'admin_assign' | translate }}
+                </button>
+              </div>
+
+              <div class="flex justify-end">
+                <button class="btn btn-secondary btn-sm" (click)="selectedUser.set(null)">{{ 'admin_close' | translate }}</button>
+              </div>
+            </div>
+          </div>
+        }
+      }
+
+      <!-- ── TAB: Roles ──────────────────────────────────────────────── -->
+      @if (activeTab() === 'roles') {
+        <div class="flex items-end gap-3 mb-6">
+          <div class="flex-1 max-w-xs">
+            <label class="label" for="newRole">{{ 'admin_newRoleLabel' | translate }}</label>
+            <input id="newRole" type="text" class="input"
+              placeholder="e.g. Moderator"
+              [(ngModel)]="newRoleName" />
+          </div>
+          <button class="btn btn-primary" [disabled]="!newRoleName.trim()" (click)="createRole()">
+            {{ 'admin_createRole' | translate }}
+          </button>
+        </div>
+
+        @if (rolesLoading()) {
+          <app-spinner />
+        } @else {
+          <div class="card overflow-hidden">
+            <table class="w-full text-sm">
+              <thead class="bg-gray-50 border-b border-gray-200">
+                <tr>
+                  <th class="text-left px-4 py-3 font-medium text-gray-600">{{ 'admin_colRole' | translate }}</th>
+                  <th class="text-left px-4 py-3 font-medium text-gray-600">{{ 'admin_colUsers' | translate }}</th>
+                  <th class="text-right px-4 py-3 font-medium text-gray-600">{{ 'admin_colActions' | translate }}</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-100">
+                @for (role of roles(); track role.name) {
+                  <tr class="hover:bg-gray-50">
+                    <td class="px-4 py-3 font-medium text-gray-800">{{ role.name }}</td>
+                    <td class="px-4 py-3 text-gray-600">{{ role.userCount }}</td>
+                    <td class="px-4 py-3 text-right">
+                      <button class="btn btn-ghost btn-sm text-red-600"
+                        [disabled]="['SuperAdmin','Admin','Blogger','Reader'].includes(role.name)"
+                        (click)="deleteRole(role.name)">
+                        {{ 'common_delete' | translate }}
+                      </button>
+                    </td>
+                  </tr>
+                }
+                @empty {
+                  <tr>
+                    <td colspan="3" class="px-4 py-8 text-center text-gray-400">{{ 'admin_noRolesFound' | translate }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      }
+
+      <!-- ── TAB: Tags ───────────────────────────────────────────────── -->
+      @if (activeTab() === 'tags') {
+        <div class="flex items-end gap-3 mb-6">
+          <div class="flex-1 max-w-xs">
+            <label class="label" for="newTag">{{ 'admin_newTagLabel' | translate }}</label>
+            <input id="newTag" type="text" class="input"
+              placeholder="e.g. Docker"
+              [(ngModel)]="newTagName" />
+          </div>
+          <button class="btn btn-primary" [disabled]="!newTagName.trim()" (click)="createTag()">
+            {{ 'admin_createTag' | translate }}
+          </button>
+        </div>
+
+        @if (tagsLoading()) {
+          <app-spinner />
+        } @else {
+          <div class="card overflow-hidden">
+            <table class="w-full text-sm">
+              <thead class="bg-gray-50 border-b border-gray-200">
+                <tr>
+                  <th class="text-left px-4 py-3 font-medium text-gray-600">{{ 'admin_colName' | translate }}</th>
+                  <th class="text-left px-4 py-3 font-medium text-gray-600">{{ 'admin_colSlug' | translate }}</th>
+                  <th class="text-left px-4 py-3 font-medium text-gray-600">{{ 'admin_colPosts' | translate }}</th>
+                  <th class="text-right px-4 py-3 font-medium text-gray-600">{{ 'admin_colActions' | translate }}</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-100">
+                @for (tag of tags(); track tag.id) {
+                  <tr class="hover:bg-gray-50">
+                    <td class="px-4 py-3">
+                      @if (editingTagId() === tag.id) {
+                        <input type="text" class="input input-sm w-40"
+                          [(ngModel)]="editingTagName" (keydown.enter)="saveTag(tag.id)" (keydown.escape)="cancelEditTag()" />
+                      } @else {
+                        <span class="font-medium text-gray-800">{{ tag.name }}</span>
+                      }
+                    </td>
+                    <td class="px-4 py-3 text-gray-500 font-mono text-xs">{{ tag.slug }}</td>
+                    <td class="px-4 py-3 text-gray-600">{{ tag.postsCount }}</td>
+                    <td class="px-4 py-3 text-right">
+                      <div class="flex justify-end gap-2">
+                        @if (editingTagId() === tag.id) {
+                          <button class="btn btn-primary btn-sm" (click)="saveTag(tag.id)">{{ 'admin_save' | translate }}</button>
+                          <button class="btn btn-ghost btn-sm" (click)="cancelEditTag()">{{ 'common_cancel' | translate }}</button>
+                        } @else {
+                          <button class="btn btn-ghost btn-sm" (click)="startEditTag(tag)">{{ 'admin_edit' | translate }}</button>
+                          <button class="btn btn-ghost btn-sm text-red-600" (click)="deleteTag(tag.id)">{{ 'common_delete' | translate }}</button>
+                        }
+                      </div>
+                    </td>
+                  </tr>
+                }
+                @empty {
+                  <tr>
+                    <td colspan="4" class="px-4 py-8 text-center text-gray-400">{{ 'admin_noTagsFound' | translate }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      }
+
+      <!-- ── TAB: Posts ──────────────────────────────────────────────── -->
+      @if (activeTab() === 'posts') {
+        <div class="flex gap-3 mb-4">
+          <select class="input w-40" [(ngModel)]="postsStatusFilter" (change)="loadAdminPosts(1)">
+            <option value="">{{ 'admin_allStatuses' | translate }}</option>
+            <option value="Published">{{ 'dashboard_published' | translate }}</option>
+            <option value="Draft">{{ 'dashboard_draft' | translate }}</option>
+            <option value="Scheduled">{{ 'dashboard_scheduled' | translate }}</option>
+            <option value="Archived">{{ 'dashboard_archived' | translate }}</option>
+          </select>
+        </div>
+
+        @if (postsLoading()) {
+          <app-spinner />
+        } @else {
+          <div class="card overflow-hidden">
+            <table class="w-full text-sm">
+              <thead class="bg-gray-50 border-b border-gray-200">
+                <tr>
+                  <th class="text-left px-4 py-3 font-medium text-gray-600">{{ 'admin_colTitle' | translate }}</th>
+                  <th class="text-left px-4 py-3 font-medium text-gray-600">{{ 'admin_colAuthor' | translate }}</th>
+                  <th class="text-left px-4 py-3 font-medium text-gray-600">{{ 'admin_colStatus' | translate }}</th>
+                  <th class="text-left px-4 py-3 font-medium text-gray-600">{{ 'admin_colViews' | translate }}</th>
+                  <th class="text-right px-4 py-3 font-medium text-gray-600">{{ 'admin_colActions' | translate }}</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-100">
+                @for (post of adminPosts(); track post.id) {
+                  <tr class="hover:bg-gray-50">
+                    <td class="px-4 py-3 max-w-xs">
+                      <p class="font-medium text-gray-800 truncate">{{ post.title }}</p>
+                      <p class="text-xs text-gray-400 font-mono">{{ post.slug }}</p>
+                    </td>
+                    <td class="px-4 py-3 text-gray-600">&#64;{{ post.authorUsername }}</td>
+                    <td class="px-4 py-3">
+                      <span class="badge text-xs"
+                        [class]="post.status === 'Published' ? 'badge-green' : post.status === 'Draft' ? 'badge-gray' : 'badge-blue'">
+                        {{ post.status }}
+                      </span>
+                    </td>
+                    <td class="px-4 py-3 text-gray-600">{{ post.viewCount | number }}</td>
+                    <td class="px-4 py-3 text-right flex gap-2 justify-end">
+                      @if (post.status === 'Published') {
+                        <button class="btn btn-ghost btn-sm text-yellow-600" (click)="unpublishPost(post)">
+                          {{ 'admin_unpublish' | translate }}
+                        </button>
+                      }
+                      <button class="btn btn-ghost btn-sm text-red-600" (click)="forceDeletePost(post.id)">
+                        {{ 'common_delete' | translate }}
+                      </button>
+                    </td>
+                  </tr>
+                }
+                @empty {
+                  <tr>
+                    <td colspan="5" class="px-4 py-8 text-center text-gray-400">{{ 'admin_noPostsFound' | translate }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+
+          @if (postsTotalPages() > 1) {
+            <div class="flex justify-center gap-2 mt-4">
+              <button class="btn btn-ghost btn-sm" [disabled]="postsPage() === 1" (click)="loadAdminPosts(postsPage() - 1)">
+                {{ 'admin_previous' | translate }}
+              </button>
+              <span class="px-3 py-1.5 text-sm text-gray-600">{{ postsPage() }} / {{ postsTotalPages() }}</span>
+              <button class="btn btn-ghost btn-sm" [disabled]="postsPage() === postsTotalPages()" (click)="loadAdminPosts(postsPage() + 1)">
+                {{ 'admin_next' | translate }}
+              </button>
+            </div>
+          }
+        }
+      }
+
+      <!-- ── TAB: Comments ───────────────────────────────────────────── -->
+      @if (activeTab() === 'comments') {
+        @if (commentsLoading()) {
+          <app-spinner />
+        } @else {
+          <div class="card overflow-hidden">
+            <table class="w-full text-sm">
+              <thead class="bg-gray-50 border-b border-gray-200">
+                <tr>
+                  <th class="text-left px-4 py-3 font-medium text-gray-600">{{ 'admin_colComment' | translate }}</th>
+                  <th class="text-left px-4 py-3 font-medium text-gray-600">{{ 'admin_colAuthor' | translate }}</th>
+                  <th class="text-left px-4 py-3 font-medium text-gray-600">{{ 'admin_colPost' | translate }}</th>
+                  <th class="text-left px-4 py-3 font-medium text-gray-600">{{ 'admin_colStatus' | translate }}</th>
+                  <th class="text-right px-4 py-3 font-medium text-gray-600">{{ 'admin_colActions' | translate }}</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-100">
+                @for (comment of comments(); track comment.id) {
+                  <tr class="hover:bg-gray-50">
+                    <td class="px-4 py-3 max-w-xs">
+                      <p class="text-gray-800 truncate">{{ comment.body }}</p>
+                    </td>
+                    <td class="px-4 py-3 text-gray-600">&#64;{{ comment.authorUsername }}</td>
+                    <td class="px-4 py-3 text-gray-600 max-w-xs">
+                      <p class="truncate">{{ comment.postTitle }}</p>
+                    </td>
+                    <td class="px-4 py-3">
+                      @if (comment.isDeleted) {
+                        <span class="badge badge-red">{{ 'admin_statusDeleted' | translate }}</span>
+                      } @else {
+                        <span class="badge badge-green">{{ 'admin_statusActive' | translate }}</span>
+                      }
+                    </td>
+                    <td class="px-4 py-3 text-right">
+                      <button class="btn btn-ghost btn-sm text-red-600"
+                        [disabled]="comment.isDeleted"
+                        (click)="deleteComment(comment.id)">
+                        {{ 'common_delete' | translate }}
+                      </button>
+                    </td>
+                  </tr>
+                }
+                @empty {
+                  <tr>
+                    <td colspan="5" class="px-4 py-8 text-center text-gray-400">{{ 'admin_noCommentsFound' | translate }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+
+          @if (commentsTotalPages() > 1) {
+            <div class="flex justify-center gap-2 mt-4">
+              <button class="btn btn-ghost btn-sm" [disabled]="commentsPage() === 1" (click)="loadComments(commentsPage() - 1)">
+                {{ 'admin_previous' | translate }}
+              </button>
+              <span class="px-3 py-1.5 text-sm text-gray-600">{{ commentsPage() }} / {{ commentsTotalPages() }}</span>
+              <button class="btn btn-ghost btn-sm" [disabled]="commentsPage() === commentsTotalPages()" (click)="loadComments(commentsPage() + 1)">
+                {{ 'admin_next' | translate }}
+              </button>
+            </div>
+          }
+        }
+      }
+
+      <!-- ── TAB: Settings ───────────────────────────────────────────── -->
+      @if (activeTab() === 'settings') {
+        @if (settingsLoading()) {
+          <app-spinner />
+        } @else {
+          <div class="flex items-center justify-between mb-4">
+            <p class="text-sm text-gray-500">{{ 'admin_settingsDesc' | translate }}</p>
+            <div class="flex gap-2">
+              <button class="btn btn-secondary btn-sm" (click)="addSetting()">{{ 'admin_addKey' | translate }}</button>
+              <button class="btn btn-primary btn-sm" [disabled]="settingsSaving()" (click)="saveSettings()">
+                @if (settingsSaving()) { {{ 'common_saving' | translate }} } @else { {{ 'admin_saveAll' | translate }} }
+              </button>
+            </div>
+          </div>
+
+          @if (settings().length === 0) {
+            <p class="text-gray-400 text-sm text-center py-12">{{ 'admin_noSettings' | translate }}</p>
+          } @else {
+            <div class="card overflow-hidden">
+              <table class="w-full text-sm">
+                <thead class="bg-gray-50 border-b border-gray-200">
+                  <tr>
+                    <th class="text-left px-4 py-3 font-medium text-gray-600 w-2/5">{{ 'admin_colKey' | translate }}</th>
+                    <th class="text-left px-4 py-3 font-medium text-gray-600">{{ 'admin_colValue' | translate }}</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                  @for (setting of settings(); track setting.key) {
+                    <tr>
+                      <td class="px-4 py-3">
+                        <code class="text-xs text-gray-700 bg-gray-100 px-1.5 py-0.5 rounded">{{ setting.key }}</code>
+                      </td>
+                      <td class="px-4 py-2">
+                        <input type="text" class="input py-1.5 text-sm"
+                          [value]="settingsEdits[setting.key]"
+                          (input)="settingsEdits[setting.key] = $any($event.target).value" />
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          }
+        }
+      }
+
+      <!-- ── TAB: Restricted Words ───────────────────────────────────── -->
+      @if (activeTab() === 'restricted-words') {
+        <div class="card p-6">
+          <h2 class="text-lg font-semibold text-gray-800 mb-4">{{ 'admin_restrictedWordsTitle' | translate }}</h2>
+          <p class="text-sm text-gray-500 mb-5">{{ 'admin_restrictedWordsDesc' | translate }}</p>
+
+          <div class="flex gap-3 mb-6 flex-wrap">
+            <input type="text" class="input flex-1 min-w-48" [placeholder]="'admin_restrictedPlaceholder' | translate"
+              [(ngModel)]="newRestrictedPhrase" name="newRestrictedPhrase" />
+            <label class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
+              <input type="checkbox" [(ngModel)]="newRestrictedIsRegex" name="newRestrictedIsRegex" class="w-4 h-4 rounded" />
+              {{ 'admin_regex' | translate }}
+            </label>
+            <select class="input w-28" [(ngModel)]="newRestrictedSeverity" name="newRestrictedSeverity">
+              <option value="Block">{{ 'admin_severityBlock' | translate }}</option>
+              <option value="Warn">{{ 'admin_severityWarn' | translate }}</option>
+            </select>
+            <button class="btn btn-primary btn-sm" [disabled]="restrictedSaving()" (click)="addRestrictedWord()">
+              @if (restrictedSaving()) { {{ 'settings_adding' | translate }} } @else { {{ 'common_add' | translate }} }
+            </button>
+          </div>
+
+          @if (restrictedWordsLoading()) {
+            <app-spinner size="sm" wrapperClass="py-6" />
+          } @else if (restrictedWords().length === 0) {
+            <p class="text-gray-400 text-sm text-center py-4">{{ 'admin_noRestrictedWords' | translate }}</p>
+          } @else {
+            <div class="overflow-x-auto">
+              <table class="w-full text-sm">
+                <thead>
+                  <tr class="border-b border-gray-200 text-left">
+                    <th class="py-2 pr-4 text-gray-500 font-medium">{{ 'admin_colPhrase' | translate }}</th>
+                    <th class="py-2 pr-4 text-gray-500 font-medium">{{ 'admin_colType' | translate }}</th>
+                    <th class="py-2 pr-4 text-gray-500 font-medium">{{ 'admin_colSeverity' | translate }}</th>
+                    <th class="py-2 pr-4 text-gray-500 font-medium">{{ 'admin_colAdded' | translate }}</th>
+                    <th class="py-2 text-gray-500 font-medium">{{ 'admin_colActions' | translate }}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (word of restrictedWords(); track word.id) {
+                    <tr class="border-b border-gray-100 hover:bg-gray-50">
+                      <td class="py-2 pr-4 font-mono text-gray-800">{{ word.phrase }}</td>
+                      <td class="py-2 pr-4">
+                        <span [class]="word.isRegex ? 'badge badge-blue' : 'badge badge-gray'">
+                          {{ word.isRegex ? ('admin_regex' | translate) : 'Plain' }}
+                        </span>
+                      </td>
+                      <td class="py-2 pr-4">
+                        <span [class]="word.severity === 'Block' ? 'badge badge-red' : 'badge badge-yellow'">
+                          {{ word.severity === 'Block' ? ('admin_severityBlock' | translate) : ('admin_severityWarn' | translate) }}
+                        </span>
+                      </td>
+                      <td class="py-2 pr-4 text-gray-400">{{ word.createdAt | date:'MMM d, y' }}</td>
+                      <td class="py-2">
+                        <button class="btn btn-danger btn-sm text-xs" (click)="deleteRestrictedWord(word.id)">{{ 'admin_remove' | translate }}</button>
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          }
+        </div>
+      }
+
+      <!-- ── TAB: Timeline ────────────────────────────────────────────── -->
+      @if (activeTab() === 'timeline') {
+        <div class="card p-6">
+          <h2 class="text-lg font-semibold text-gray-800 mb-4">{{ 'admin_timelineTitle' | translate }}</h2>
+          @if (auditLogsLoading()) {
+            <app-spinner />
+          } @else if (auditLogs().length === 0) {
+            <p class="text-gray-400 text-sm text-center py-4">{{ 'admin_noAuditLogs' | translate }}</p>
+          } @else {
+            <div class="space-y-2">
+              @for (log of auditLogs(); track log.id) {
+                <div class="flex items-start gap-3 p-3 rounded-lg hover:bg-gray-50 border border-gray-100">
+                  <div class="flex-1 min-w-0">
+                    <div class="flex flex-wrap items-center gap-2">
+                      <span class="badge badge-blue text-xs">{{ log.action }}</span>
+                      <span class="badge badge-gray text-xs">{{ log.entityType }}</span>
+                      @if (log.entityId) {
+                        <span class="text-xs text-gray-400 font-mono truncate max-w-[12rem]">{{ log.entityId }}</span>
+                      }
+                    </div>
+                    <div class="text-xs text-gray-500 mt-1">
+                      <span class="font-medium text-gray-700">&#64;{{ log.actorUsername }}</span>
+                      @if (log.reason) {
+                        &nbsp;&mdash;&nbsp;{{ log.reason }}
+                      }
+                    </div>
+                  </div>
+                  <span class="text-xs text-gray-400 whitespace-nowrap">{{ log.createdAt | date:'MMM d, HH:mm' }}</span>
+                </div>
+              }
+            </div>
+
+            @if (auditLogsTotalPages() > 1) {
+              <div class="flex justify-center gap-2 mt-4">
+                <button class="btn btn-ghost btn-sm" [disabled]="auditLogsPage() === 1" (click)="loadAuditLogs(auditLogsPage() - 1)">
+                  {{ 'admin_previous' | translate }}
+                </button>
+                <span class="px-3 py-1.5 text-sm text-gray-600">{{ auditLogsPage() }} / {{ auditLogsTotalPages() }}</span>
+                <button class="btn btn-ghost btn-sm" [disabled]="auditLogsPage() === auditLogsTotalPages()" (click)="loadAuditLogs(auditLogsPage() + 1)">
+                  {{ 'admin_next' | translate }}
+                </button>
+              </div>
+            }
+          }
+        </div>
+      }
+
+      @if (activeTab() === 'reports') {
+        <div class="card p-6">
+          <h2 class="text-lg font-semibold text-gray-800 mb-4">Reports</h2>
+
+          <!-- Filters -->
+          <div class="flex gap-3 mb-5 flex-wrap">
+            <select class="input w-36" [(ngModel)]="reportsStatusFilter" (change)="loadReports(1)">
+              <option value="">All statuses</option>
+              <option value="Pending">Pending</option>
+              <option value="UnderReview">Under review</option>
+              <option value="Resolved">Resolved</option>
+              <option value="Rejected">Rejected</option>
+            </select>
+            <select class="input w-36" [(ngModel)]="reportsTypeFilter" (change)="loadReports(1)">
+              <option value="">All types</option>
+              <option value="User">User</option>
+              <option value="Post">Post</option>
+              <option value="Comment">Comment</option>
+            </select>
+          </div>
+
+          @if (reportsLoading()) {
+            <app-spinner size="sm" wrapperClass="py-6" />
+          } @else if (reports().length === 0) {
+            <p class="text-gray-400 text-sm text-center py-4">No reports found.</p>
+          } @else {
+            <div class="overflow-x-auto">
+              <table class="w-full text-sm">
+                <thead>
+                  <tr class="border-b border-gray-200 text-left">
+                    <th class="py-2 pr-3 text-gray-500 font-medium">Type</th>
+                    <th class="py-2 pr-3 text-gray-500 font-medium">Reason</th>
+                    <th class="py-2 pr-3 text-gray-500 font-medium">Reporter</th>
+                    <th class="py-2 pr-3 text-gray-500 font-medium">Status</th>
+                    <th class="py-2 pr-3 text-gray-500 font-medium">Date</th>
+                    <th class="py-2 text-gray-500 font-medium">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (report of reports(); track report.id) {
+                    <tr class="border-b border-gray-100 hover:bg-gray-50">
+                      <td class="py-2 pr-3">
+                        <span class="badge badge-gray">{{ report.targetType }}</span>
+                      </td>
+                      <td class="py-2 pr-3 text-gray-700">{{ report.reason }}</td>
+                      <td class="py-2 pr-3 text-gray-500">{{ report.reporterUsername }}</td>
+                      <td class="py-2 pr-3">
+                        <span [class]="report.status === 'Pending' ? 'badge badge-blue'
+                                     : report.status === 'Resolved' ? 'badge badge-green'
+                                     : report.status === 'Rejected' ? 'badge badge-gray'
+                                     : 'badge badge-yellow'">
+                          {{ report.status }}
+                        </span>
+                      </td>
+                      <td class="py-2 pr-3 text-gray-400">{{ report.createdAt | date:'MMM d, y' }}</td>
+                      <td class="py-2">
+                        @if (report.status === 'Pending' || report.status === 'UnderReview') {
+                          <button class="btn btn-primary btn-sm text-xs" (click)="openReview(report)">Review</button>
+                        } @else {
+                          <span class="text-xs text-gray-400">{{ report.adminNote ?? '—' }}</span>
+                        }
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Pagination -->
+            @if (reportsTotalPages() > 1) {
+              <div class="flex justify-center gap-2 mt-4">
+                @for (p of [].constructor(reportsTotalPages()); track $index) {
+                  <button class="btn btn-sm"
+                    [class]="reportsPage() === $index + 1 ? 'btn-primary' : 'btn-ghost'"
+                    (click)="loadReports($index + 1)">{{ $index + 1 }}</button>
+                }
+              </div>
+            }
+          }
+        </div>
+      }
+
+      <!-- ── Languages tab ───────────────────────────────────────────────── -->
+      @if (activeTab() === 'languages') {
+        <div class="space-y-4">
+          <div class="flex items-center justify-between">
+            <h2 class="text-lg font-semibold text-gray-800">{{ 'admin_lang_title' | translate }}</h2>
+            <button class="btn btn-primary btn-sm" (click)="openCreateLanguage()">
+              + {{ 'admin_lang_addNew' | translate }}
+            </button>
+          </div>
+
+          @if (languagesLoading()) {
+            <app-spinner />
+          } @else if (languages().length === 0) {
+            <p class="text-sm text-gray-500">{{ 'admin_lang_noLanguages' | translate }}</p>
+          } @else {
+            <div class="overflow-x-auto rounded-lg border border-gray-200">
+              <table class="w-full text-sm">
+                <thead class="bg-gray-50 text-gray-500 uppercase text-xs">
+                  <tr>
+                    <th class="px-4 py-3 text-left">{{ 'admin_lang_colCode' | translate }}</th>
+                    <th class="px-4 py-3 text-left">{{ 'admin_lang_colName' | translate }}</th>
+                    <th class="px-4 py-3 text-left">{{ 'admin_lang_colNative' | translate }}</th>
+                    <th class="px-4 py-3 text-left">{{ 'admin_lang_colStatus' | translate }}</th>
+                    <th class="px-4 py-3 text-left">{{ 'admin_lang_colTranslation' | translate }}</th>
+                    <th class="px-4 py-3 text-left">{{ 'admin_lang_colActions' | translate }}</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100 bg-white">
+                  @for (lang of languages(); track lang.code) {
+                    <tr>
+                      <td class="px-4 py-3 font-mono font-semibold text-gray-800">{{ lang.code.toUpperCase() }}</td>
+                      <td class="px-4 py-3 text-gray-700">{{ lang.name }}</td>
+                      <td class="px-4 py-3 text-gray-700">{{ lang.nativeName }}</td>
+                      <td class="px-4 py-3">
+                        @if (lang.isDefault) {
+                          <span class="badge badge-info text-xs">{{ 'admin_lang_statusDefault' | translate }}</span>
+                        } @else if (lang.isActive) {
+                          <span class="badge badge-success text-xs">{{ 'admin_lang_statusActive' | translate }}</span>
+                        } @else {
+                          <span class="badge badge-ghost text-xs">{{ 'admin_lang_statusInactive' | translate }}</span>
+                        }
+                      </td>
+                      <td class="px-4 py-3">
+                        @if (lang.hasTranslation) {
+                          <span class="text-green-600 text-xs font-medium">{{ 'admin_lang_hasTranslation' | translate }}</span>
+                        } @else {
+                          <span class="text-gray-400 text-xs">{{ 'admin_lang_noTranslation' | translate }}</span>
+                        }
+                      </td>
+                      <td class="px-4 py-3">
+                        <div class="flex items-center gap-2 flex-wrap">
+                          <button class="btn btn-ghost btn-xs" (click)="openEditLanguage(lang)">
+                            {{ 'admin_lang_edit' | translate }}
+                          </button>
+                          @if (!lang.isDefault) {
+                            <button class="btn btn-ghost btn-xs"
+                                    [class.text-yellow-600]="lang.isActive"
+                                    [class.text-green-600]="!lang.isActive"
+                                    (click)="toggleLanguage(lang)">
+                              {{ (lang.isActive ? 'admin_lang_deactivate' : 'admin_lang_activate') | translate }}
+                            </button>
+                            <button class="btn btn-ghost btn-xs text-red-500" (click)="confirmDeleteLanguage(lang)">
+                              {{ 'admin_lang_delete' | translate }}
+                            </button>
+                          }
+                        </div>
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          }
+        </div>
+      }
+
+    </div>
+  </div>
+
+  <!-- Suspend user modal -->
+  @if (suspendingUser()) {
+    <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4">
+      <div class="bg-white rounded-xl shadow-xl w-full max-w-lg p-6">
+        <h3 class="font-semibold text-gray-800 mb-1">{{ 'admin_suspendTitle' | translate }} &#64;{{ suspendingUser()!.username }}</h3>
+
+        @if (isSuspended(suspendingUser()!)) {
+          <p class="text-sm text-yellow-700 bg-yellow-50 rounded-lg px-3 py-2 mb-4">
+            {{ 'admin_suspendActive' | translate }} {{ suspendingUser()!.suspendedUntil | date:'medium' }}
+          </p>
+          <div class="flex justify-end gap-2 mb-4">
+            <button class="btn btn-secondary btn-sm" (click)="closeSuspendModal()">{{ 'common_cancel' | translate }}</button>
+            <button class="btn btn-primary btn-sm" (click)="liftSuspension(suspendingUser()!)">
+              {{ 'admin_liftSuspension' | translate }}
+            </button>
+          </div>
+        } @else {
+          <div class="mb-3">
+            <label class="block text-sm font-medium text-gray-700 mb-1">{{ 'admin_suspendReason' | translate }}</label>
+            <input type="text" class="input w-full" maxlength="500" [(ngModel)]="suspendReason"
+              [placeholder]="'admin_suspendReasonPlaceholder' | translate" />
+          </div>
+          <div class="mb-5">
+            <label class="block text-sm font-medium text-gray-700 mb-1">{{ 'admin_suspendDays' | translate }}</label>
+            <input type="number" class="input w-32" min="1" max="365" [(ngModel)]="suspendDays" />
+          </div>
+          <div class="flex justify-end gap-2 mb-4">
+            <button class="btn btn-ghost btn-sm" [disabled]="suspendSaving()" (click)="closeSuspendModal()">{{ 'common_cancel' | translate }}</button>
+            <button class="btn btn-danger btn-sm" [disabled]="!suspendReason.trim() || suspendDays < 1 || suspendSaving()" (click)="submitSuspension()">
+              {{ suspendSaving() ? ('common_saving' | translate) : ('admin_suspendConfirm' | translate) }}
+            </button>
+          </div>
+        }
+
+        @if (suspensionHistory().length > 0) {
+          <div class="border-t border-gray-100 pt-4">
+            <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">{{ 'admin_suspendHistory' | translate }}</p>
+            <div class="space-y-2 max-h-48 overflow-y-auto">
+              @for (s of suspensionHistory(); track s.id) {
+                <div class="text-xs text-gray-600 bg-gray-50 rounded p-2">
+                  <span [class]="s.isActive ? 'text-yellow-600 font-medium' : 'text-gray-400'">
+                    {{ s.isActive ? ('admin_suspendStatusActive' | translate) : ('admin_suspendStatusLifted' | translate) }}
+                  </span>
+                  &bull; {{ s.reason }}
+                  &bull; {{ 'admin_suspendExpires' | translate }} {{ s.expiresAt | date:'mediumDate' }}
+                  @if (s.liftedByUsername) {
+                    &bull; lifted by &#64;{{ s.liftedByUsername }}
+                  }
+                </div>
+              }
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  }
+
+  <!-- Review report modal -->
+  @if (reviewingReport()) {
+    <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4">
+      <div class="bg-white rounded-xl shadow-xl w-full max-w-md p-6">
+        <h3 class="font-semibold text-gray-800 mb-1">Review report</h3>
+        <p class="text-xs text-gray-400 mb-4">
+          {{ reviewingReport()!.targetType }} &bull; {{ reviewingReport()!.reason }}
+          @if (reviewingReport()!.description) {
+            &bull; "{{ reviewingReport()!.description }}"
+          }
+        </p>
+
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-gray-700 mb-1">Decision</label>
+          <select class="input w-full" [(ngModel)]="reviewDecision">
+            <option value="">Select decision...</option>
+            <option value="Resolved">Resolved — content actioned</option>
+            <option value="Rejected">Rejected — not a violation</option>
+          </select>
+        </div>
+
+        <div class="mb-5">
+          <label class="block text-sm font-medium text-gray-700 mb-1">Note <span class="text-gray-400 font-normal">(optional)</span></label>
+          <textarea class="input resize-none w-full" rows="2" maxlength="500"
+            placeholder="Internal note..." [(ngModel)]="reviewNote"></textarea>
+        </div>
+
+        <div class="flex justify-end gap-2">
+          <button class="btn btn-ghost btn-sm" [disabled]="reviewSaving()" (click)="closeReview()">Cancel</button>
+          <button class="btn btn-primary btn-sm" [disabled]="!reviewDecision || reviewSaving()" (click)="submitReview()">
+            {{ reviewSaving() ? 'Saving...' : 'Submit' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Create language modal -->
+  @if (creatingLanguage()) {
+    <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4">
+      <div class="bg-white rounded-xl shadow-xl w-full max-w-md p-6">
+        <h3 class="font-semibold text-gray-800 mb-5">{{ 'admin_lang_createTitle' | translate }}</h3>
+
+        <div class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">{{ 'admin_lang_code' | translate }}</label>
+            <input class="input w-full" [placeholder]="'admin_lang_codePlaceholder' | translate"
+                   [(ngModel)]="newLangCode" maxlength="10" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">{{ 'admin_lang_name' | translate }}</label>
+            <input class="input w-full" [placeholder]="'admin_lang_namePlaceholder' | translate"
+                   [(ngModel)]="newLangName" maxlength="100" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">{{ 'admin_lang_nativeName' | translate }}</label>
+            <input class="input w-full" [placeholder]="'admin_lang_nativeNamePlaceholder' | translate"
+                   [(ngModel)]="newLangNativeName" maxlength="100" />
+          </div>
+          <label class="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+            <input type="checkbox" class="checkbox" [(ngModel)]="newLangIsActive" />
+            {{ 'admin_lang_activeOnCreate' | translate }}
+          </label>
+        </div>
+
+        <div class="flex justify-end gap-2 mt-6">
+          <button class="btn btn-ghost btn-sm" [disabled]="languageSaving()" (click)="closeCreateLanguage()">
+            {{ 'common_cancel' | translate }}
+          </button>
+          <button class="btn btn-primary btn-sm"
+                  [disabled]="!newLangCode.trim() || !newLangName.trim() || !newLangNativeName.trim() || languageSaving()"
+                  (click)="submitCreateLanguage()">
+            {{ languageSaving() ? ('admin_lang_saving' | translate) : ('common_save' | translate) }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Edit language modal -->
+  @if (editingLanguage()) {
+    <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4">
+      <div class="bg-white rounded-xl shadow-xl w-full max-w-md p-6">
+        <h3 class="font-semibold text-gray-800 mb-1">{{ 'admin_lang_editTitle' | translate }}</h3>
+        <p class="text-xs text-gray-400 font-mono mb-5">{{ editingLanguage()!.code.toUpperCase() }}</p>
+
+        <div class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">{{ 'admin_lang_name' | translate }}</label>
+            <input class="input w-full" [(ngModel)]="editLangName" maxlength="100" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">{{ 'admin_lang_nativeName' | translate }}</label>
+            <input class="input w-full" [(ngModel)]="editLangNativeName" maxlength="100" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">{{ 'admin_lang_uploadFile' | translate }}</label>
+            <input type="file" accept=".json" class="input w-full text-sm" (change)="onTranslationFileSelected($event)" />
+            <p class="text-xs text-gray-400 mt-1">{{ 'admin_lang_uploadHint' | translate }}</p>
+          </div>
+        </div>
+
+        <div class="flex justify-end gap-2 mt-6">
+          <button class="btn btn-ghost btn-sm" [disabled]="languageSaving()" (click)="closeEditLanguage()">
+            {{ 'common_cancel' | translate }}
+          </button>
+          <button class="btn btn-primary btn-sm"
+                  [disabled]="!editLangName.trim() || !editLangNativeName.trim() || languageSaving()"
+                  (click)="submitEditLanguage()">
+            {{ languageSaving() ? ('admin_lang_saving' | translate) : ('common_save' | translate) }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Confirm dialog -->
+  @if (confirmMsg()) {
+    <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4">
+      <div class="bg-white rounded-xl shadow-xl w-full max-w-sm p-6">
+        <h3 class="font-semibold text-gray-800 mb-2">{{ 'admin_confirmTitle' | translate }}</h3>
+        <p class="text-sm text-gray-600 mb-6">{{ confirmMsg() }}</p>
+        <div class="flex justify-end gap-3">
+          <button class="btn btn-secondary btn-sm" (click)="cancelConfirm()">{{ 'common_cancel' | translate }}</button>
+          <button class="btn btn-danger btn-sm" (click)="executeConfirm()">{{ 'admin_confirm' | translate }}</button>
+        </div>
+      </div>
+    </div>
+  }
+
+</div>

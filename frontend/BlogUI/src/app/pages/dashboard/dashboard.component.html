@@ -1,0 +1,126 @@
+<div class="max-w-5xl mx-auto px-4 py-8">
+  <div class="flex items-center justify-between mb-8">
+    <h1 class="text-2xl font-bold text-gray-900">{{ 'dashboard_title' | translate }}</h1>
+    <a routerLink="/editor" class="btn btn-primary no-underline">{{ 'dashboard_writeNewPost' | translate }}</a>
+  </div>
+
+  @if (loading()) {
+    <app-spinner />
+  } @else if (!data()) {
+    <p class="text-gray-400">{{ 'dashboard_noData' | translate }}</p>
+  } @else {
+
+    <!-- Stats overview -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      <div class="card p-5">
+        <p class="text-xs text-gray-500 uppercase tracking-wide">{{ 'dashboard_totalViews' | translate }}</p>
+        <p class="text-3xl font-bold text-gray-900 mt-1">{{ data()!.totalViews | number }}</p>
+        <p class="text-xs text-green-600 mt-1">+{{ data()!.viewsLast30Days | number }} {{ 'dashboard_last30d' | translate }}</p>
+      </div>
+      <div class="card p-5">
+        <p class="text-xs text-gray-500 uppercase tracking-wide">{{ 'dashboard_totalLikes' | translate }}</p>
+        <p class="text-3xl font-bold text-gray-900 mt-1">{{ data()!.totalLikes | number }}</p>
+        <p class="text-xs text-green-600 mt-1">+{{ data()!.likesLast30Days | number }} {{ 'dashboard_last30d' | translate }}</p>
+      </div>
+      <div class="card p-5">
+        <p class="text-xs text-gray-500 uppercase tracking-wide">{{ 'dashboard_followersLabel' | translate }}</p>
+        <p class="text-3xl font-bold text-gray-900 mt-1">{{ data()!.totalFollowers | number }}</p>
+      </div>
+      <div class="card p-5">
+        <p class="text-xs text-gray-500 uppercase tracking-wide">{{ 'dashboard_postsLabel' | translate }}</p>
+        <p class="text-3xl font-bold text-gray-900 mt-1">{{ data()!.totalPosts | number }}</p>
+      </div>
+    </div>
+
+    <!-- Top posts -->
+    @if (data()!.topPosts.length > 0) {
+      <div class="card mb-8">
+        <div class="px-5 py-4 border-b border-gray-100">
+          <h2 class="font-semibold text-gray-800">{{ 'dashboard_topPostsByViews' | translate }}</h2>
+        </div>
+        <div class="divide-y divide-gray-100">
+          @for (post of data()!.topPosts; track post.id) {
+            <div class="px-5 py-3 flex items-center gap-4">
+              <div class="flex-1 min-w-0">
+                <a [routerLink]="['/post', post.slug]"
+                   class="text-sm font-medium text-gray-800 hover:text-primary-600 transition-colors truncate block no-underline">
+                  {{ post.title }}
+                </a>
+                <p class="text-xs text-gray-400">{{ post.publishedAt | date:'MMM d, y' }}</p>
+              </div>
+              <div class="flex items-center gap-4 text-xs text-gray-400 shrink-0">
+                <span>{{ post.viewCount | number }} {{ 'postcard_views' | translate }}</span>
+                <span>{{ post.likesCount }} {{ 'postcard_likes' | translate }}</span>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- Newsletter -->
+    <div class="card mb-8">
+      <div class="px-5 py-4 border-b border-gray-100">
+        <h2 class="font-semibold text-gray-800">{{ 'dashboard_sendNewsletter' | translate }}</h2>
+        <p class="text-xs text-gray-400 mt-0.5">{{ 'dashboard_newsletterDesc' | translate }}</p>
+      </div>
+
+      @if (nlPreview()) {
+        <div class="px-5 py-4 flex flex-col gap-4">
+          <div class="bg-amber-50 border border-amber-200 rounded-lg p-4 text-sm text-amber-800">
+            <p class="font-semibold mb-1">{{ 'dashboard_confirmSendTitle' | translate }}</p>
+            <p>{{ 'dashboard_confirmSendDesc1' | translate }} <strong>{{ nlPreview()!.estimatedRecipients }}</strong> {{ 'dashboard_confirmSendDesc2' | translate }}</p>
+          </div>
+          <div class="flex gap-2">
+            <button class="btn btn-primary btn-sm" [disabled]="nlSending()" (click)="confirmNewsletter()">
+              @if (nlSending()) { {{ 'dashboard_sending' | translate }} } @else { {{ 'dashboard_confirmSend' | translate }} }
+            </button>
+            <button class="btn btn-secondary btn-sm" [disabled]="nlSending()" (click)="cancelNewsletter()">{{ 'common_cancel' | translate }}</button>
+          </div>
+        </div>
+      } @else {
+        <div class="px-5 py-4 flex flex-col gap-4">
+          <div>
+            <label class="label" for="nlSubject">{{ 'dashboard_nlSubject' | translate }}</label>
+            <input id="nlSubject" type="text" class="input"
+              [placeholder]="'dashboard_nlSubjectPlaceholder' | translate"
+              [(ngModel)]="newsletterSubject" name="nlSubject" />
+          </div>
+          <div>
+            <label class="label" for="nlBody">{{ 'dashboard_nlContent' | translate }}</label>
+            <textarea id="nlBody" class="input resize-y font-mono text-sm" rows="6"
+              placeholder="<p>Hello, thanks for following...</p>"
+              [(ngModel)]="newsletterBody" name="nlBody"></textarea>
+          </div>
+          <div>
+            <button class="btn btn-primary btn-sm" [disabled]="nlSending()" (click)="initiateNewsletter()">
+              @if (nlSending()) { {{ 'dashboard_nlPreparing' | translate }} } @else { {{ 'dashboard_nlPreviewSend' | translate }} }
+            </button>
+          </div>
+        </div>
+      }
+    </div>
+
+    <!-- Daily stats chart -->
+    @if (data()!.dailyStats.length > 0) {
+      <div class="card">
+        <div class="px-5 py-4 border-b border-gray-100">
+          <h2 class="font-semibold text-gray-800">{{ 'dashboard_last30DaysViews' | translate }}</h2>
+        </div>
+        <div class="px-5 py-4">
+          <div class="flex items-end gap-1 h-24">
+            @for (day of data()!.dailyStats; track day.date) {
+              <div class="flex-1 flex flex-col items-center">
+                <div class="w-full bg-primary-400 rounded-sm transition-all"
+                  [style.height.px]="barHeight(day.viewCount)"
+                  [title]="day.date + ': ' + day.viewCount + ' views'">
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+    }
+
+  }
+</div>
