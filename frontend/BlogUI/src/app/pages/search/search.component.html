@@ -14,6 +14,13 @@
 
   @if (loading() && posts().length === 0) {
     <app-spinner />
+  } @else if (failed()) {
+    <div class="text-center py-12">
+      <p class="text-red-600 text-sm">{{ 'search_failed' | translate }}</p>
+      <button class="btn btn-secondary btn-sm mt-4" (click)="submitSearch()">
+        {{ 'search_retry' | translate }}
+      </button>
+    </div>
   } @else if (!loading() && posts().length === 0 && query()) {
     <p class="text-gray-400 text-sm text-center py-12">{{ 'search_noPostsFound' | translate }} "{{ query() }}".</p>
   } @else {

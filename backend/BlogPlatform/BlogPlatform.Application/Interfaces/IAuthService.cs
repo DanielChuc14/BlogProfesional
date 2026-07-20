@@ -12,5 +12,4 @@ public interface IAuthService
     Task<ResultModel> ConfirmEmailAsync(string userId, string token, CancellationToken ct = default);
     Task<ResultModel> ForgotPasswordAsync(ForgotPasswordRequest request, CancellationToken ct = default);
     Task<ResultModel> ResetPasswordAsync(ResetPasswordRequest request, CancellationToken ct = default);
-    Task<ResultModel<AuthResponse>> GoogleLoginAsync(GoogleLoginRequest request, CancellationToken ct = default);
 }

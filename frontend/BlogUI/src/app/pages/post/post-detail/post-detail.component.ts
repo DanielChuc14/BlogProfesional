@@ -1,4 +1,5 @@
-import { Component, inject, signal, OnInit, OnDestroy, input, ElementRef, PLATFORM_ID } from '@angular/core';
+import { Component, inject, signal, computed, OnInit, OnDestroy, input, ElementRef, PLATFORM_ID } from '@angular/core';
+import { marked } from 'marked';
 import { RouterLink } from '@angular/router';
 import { DatePipe, isPlatformBrowser } from '@angular/common';
 import { PostService } from '../../../core/services/post.service';
@@ -12,6 +13,7 @@ import { ReportModalComponent } from '../../../shared/components/report-modal/re
 import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
 import { TranslatePipe } from '../../../core/pipes/translate.pipe';
+import { extractApiError } from '../../../core/utils/api-error';
 
 @Component({
   selector: 'app-post-detail',
@@ -39,10 +41,20 @@ export class PostDetailComponent implements OnInit, OnDestroy {
   readonly reportTarget       = signal<{ type: 'Post' | 'Comment'; id: string } | null>(null);
   newComment = '';
 
+  // El cuerpo se guarda en Markdown. Angular sanea el HTML al bindear [innerHTML],
+  // asi que el contenido de usuario no puede inyectar scripts.
+  readonly renderedBody = computed(() => {
+    const body = this.post()?.body;
+    return body ? (marked.parse(body, { async: false }) as string) : '';
+  });
+
   ngOnInit(): void {
     this.postSvc.getBySlug(this.slug()).subscribe({
       next: post => {
         this.post.set(post);
+        // El estado del corazon viene del backend; antes solo se conocia tras
+        // hacer clic, por lo que se perdia al recargar.
+        this.liked.set(post.likedByCurrentUser);
         this.loading.set(false);
         if (post.isAdultContent) {
           this.showAdultWarning.set(true);
@@ -77,14 +89,26 @@ export class PostDetailComponent implements OnInit, OnDestroy {
   }
 
   toggleLike(): void {
-    if (!this.auth.isLoggedIn()) { this.toast.info('Sign in to like posts.'); return; }
+    if (!this.auth.isLoggedIn()) { this.toast.info('toast_signInToLikePosts'); return; }
     const post = this.post();
     if (!post) return;
     if (this.liked()) {
-      this.postSvc.unlike(post.id).subscribe(() => this.liked.set(false));
+      this.postSvc.unlike(post.id).subscribe(() => {
+        this.liked.set(false);
+        this.adjustLikes(-1);
+      });
     } else {
-      this.postSvc.like(post.id).subscribe(() => this.liked.set(true));
+      this.postSvc.like(post.id).subscribe(() => {
+        this.liked.set(true);
+        this.adjustLikes(1);
+      });
     }
+  }
+
+  // El contador vive en el post cargado; sin esto solo se refresca al recargar.
+  private adjustLikes(delta: number): void {
+    this.post.update(p =>
+      p ? { ...p, likesCount: Math.max(0, p.likesCount + delta) } : p);
   }
 
   openReport(type: 'Post' | 'Comment', id: string): void {
@@ -102,13 +126,14 @@ export class PostDetailComponent implements OnInit, OnDestroy {
     this.commentSvc.create(post.id, { body: this.newComment.trim() }).subscribe({
       next: comment => {
         this.comments.update(cs => [comment, ...cs]);
+        this.post.update(p => p ? { ...p, commentsCount: p.commentsCount + 1 } : p);
         this.newComment = '';
         this.submitting.set(false);
-        this.toast.success('Comment posted!');
+        this.toast.success('toast_commentPosted');
       },
       error: (err: HttpErrorResponse) => {
         this.submitting.set(false);
-        this.toast.error(err.error?.error ?? err.error?.title ?? 'Failed to post comment.');
+        this.toast.error(extractApiError(err, 'toast_failedToPostComment'));
       },
     });
   }

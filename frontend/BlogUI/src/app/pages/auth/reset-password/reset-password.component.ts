@@ -5,6 +5,7 @@ import { AuthService } from '../../../core/services/auth.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { HttpErrorResponse } from '@angular/common/http';
 import { TranslatePipe } from '../../../core/pipes/translate.pipe';
+import { extractApiError } from '../../../core/utils/api-error';
 
 @Component({
   selector: 'app-reset-password',
@@ -36,12 +37,12 @@ export class ResetPasswordComponent implements OnInit {
 
     this.auth.resetPassword({ email: this.email, token: this.token, newPassword: this.password }).subscribe({
       next: () => {
-        this.toast.success('Password updated. Please sign in.');
+        this.toast.success('toast_passwordUpdatedPleaseSignIn');
         this.router.navigate(['/login']);
       },
       error: (err: HttpErrorResponse) => {
         this.loading.set(false);
-        this.errorMsg.set(err.error?.error ?? err.error?.title ?? 'Reset failed. The link may have expired.');
+        this.errorMsg.set(extractApiError(err, 'toast_resetFailedTheLinkMayHaveExpired'));
       },
     });
   }

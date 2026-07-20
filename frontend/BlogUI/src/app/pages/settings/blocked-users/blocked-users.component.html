@@ -1,16 +1,16 @@
 <div class="max-w-2xl mx-auto px-4 py-8">
   <div class="flex items-center gap-3 mb-6">
     <a routerLink="/dashboard" class="text-gray-400 hover:text-gray-600 no-underline">
-      &larr; Back
+      &larr; {{ 'blocked_back' | translate }}
     </a>
-    <h1 class="text-2xl font-bold text-gray-900">Blocked users</h1>
+    <h1 class="text-2xl font-bold text-gray-900">{{ 'blocked_title' | translate }}</h1>
   </div>
 
   @if (loading()) {
     <app-spinner />
   } @else if (items().length === 0) {
     <div class="text-center text-gray-400 py-16">
-      <p>You have not blocked anyone.</p>
+      <p>{{ 'blocked_empty' | translate }}</p>
     </div>
   } @else {
     <ul class="divide-y divide-gray-100">
@@ -32,7 +32,7 @@
           <button class="btn btn-sm btn-ghost text-red-500 border border-red-200 shrink-0"
             [disabled]="unblocking() === user.userId"
             (click)="unblock(user.userId)">
-            {{ unblocking() === user.userId ? '...' : 'Unblock' }}
+            {{ unblocking() === user.userId ? '...' : ('blocked_unblock' | translate) }}
           </button>
         </li>
       }
@@ -41,7 +41,7 @@
     @if (hasMore()) {
       <div class="text-center mt-6">
         <button class="btn btn-ghost btn-sm" [disabled]="loadingMore()" (click)="loadMore()">
-          {{ loadingMore() ? 'Loading...' : 'Load more' }}
+          {{ (loadingMore() ? 'blocked_loading' : 'blocked_loadMore') | translate }}
         </button>
       </div>
     }

@@ -5,8 +5,7 @@ import { AuthService } from '../../../core/services/auth.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { HttpErrorResponse } from '@angular/common/http';
 import { TranslatePipe } from '../../../core/pipes/translate.pipe';
-
-declare const google: any;
+import { extractApiError } from '../../../core/utils/api-error';
 
 @Component({
   selector: 'app-login',
@@ -22,7 +21,6 @@ export class LoginComponent {
   email    = '';
   password = '';
   readonly loading        = signal(false);
-  readonly googleLoading  = signal(false);
   readonly errorMsg       = signal('');
 
   submit(): void {
@@ -32,39 +30,13 @@ export class LoginComponent {
 
     this.auth.login({ email: this.email, password: this.password }).subscribe({
       next: () => {
-        this.toast.success('Welcome back!');
+        this.toast.success('toast_welcomeBack');
         this.router.navigate(['/']);
       },
       error: (err: HttpErrorResponse) => {
         this.loading.set(false);
-        this.errorMsg.set(err.error?.error ?? err.error?.title ?? 'Invalid credentials.');
+        this.errorMsg.set(extractApiError(err, 'toast_invalidCredentials'));
       },
     });
-  }
-
-  signInWithGoogle(): void {
-    if (typeof google === 'undefined') {
-      this.toast.error('Google Sign-In is not available. Check your connection.');
-      return;
-    }
-    this.googleLoading.set(true);
-    this.errorMsg.set('');
-    google.accounts.id.initialize({
-      client_id: '{{GOOGLE_CLIENT_ID}}',
-      callback: (response: { credential: string }) => {
-        this.auth.googleLogin(response.credential).subscribe({
-          next: () => {
-            this.googleLoading.set(false);
-            this.toast.success('Welcome!');
-            this.router.navigate(['/']);
-          },
-          error: (err: HttpErrorResponse) => {
-            this.googleLoading.set(false);
-            this.errorMsg.set(err.error?.error ?? err.error?.title ?? 'Google sign-in failed.');
-          },
-        });
-      },
-    });
-    google.accounts.id.prompt();
   }
 }

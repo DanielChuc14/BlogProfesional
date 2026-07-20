@@ -22,6 +22,9 @@ export class SearchComponent implements OnInit {
   readonly loading    = signal(false);
   readonly hasMore    = signal(false);
   readonly query      = signal('');
+  // Sin esto, un fallo del API dejaba la lista vacia y la UI lo mostraba
+  // como "sin resultados", indistinguible de una busqueda legitima sin coincidencias.
+  readonly failed     = signal(false);
 
   searchInput = '';
   private cursor: string | undefined;
@@ -41,6 +44,7 @@ export class SearchComponent implements OnInit {
 
   private loadResults(q: string, append = false): void {
     this.loading.set(true);
+    this.failed.set(false);
     this.tagSvc.search(q, undefined, this.cursor).subscribe({
       next: res => {
         this.posts.update(current => append ? [...current, ...res.items] : res.items);
@@ -48,7 +52,11 @@ export class SearchComponent implements OnInit {
         this.cursor = res.nextCursor ?? undefined;
         this.loading.set(false);
       },
-      error: () => this.loading.set(false),
+      error: () => {
+        this.failed.set(true);
+        this.hasMore.set(false);
+        this.loading.set(false);
+      },
     });
   }
 

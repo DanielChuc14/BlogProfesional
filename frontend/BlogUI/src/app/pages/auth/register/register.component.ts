@@ -5,6 +5,7 @@ import { AuthService } from '../../../core/services/auth.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { HttpErrorResponse } from '@angular/common/http';
 import { TranslatePipe } from '../../../core/pipes/translate.pipe';
+import { extractApiError } from '../../../core/utils/api-error';
 
 @Component({
   selector: 'app-register',
@@ -36,7 +37,7 @@ export class RegisterComponent {
       },
       error: (err: HttpErrorResponse) => {
         this.loading.set(false);
-        this.errorMsg.set(err.error?.error ?? err.error?.title ?? 'Registration failed. Please try again.');
+        this.errorMsg.set(extractApiError(err, 'toast_registrationFailedPleaseTryAgain'));
       },
     });
   }

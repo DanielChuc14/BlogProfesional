@@ -10,7 +10,6 @@ using BlogPlatform.Domain.Entities.Content;
 using BlogPlatform.Domain.Interfaces;
 using BlogPlatform.Infrastructure.Helpers;
 using FluentValidation;
-using Google.Apis.Auth;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
@@ -47,7 +46,8 @@ public class AuthService(
         {
             Email = request.Email,
             UserName = request.Username,
-            DisplayName = request.DisplayName
+            DisplayName = request.DisplayName,
+            EmailConfirmed = true
         };
 
         var result = await userManager.CreateAsync(user, request.Password);
@@ -67,8 +67,6 @@ public class AuthService(
         }, ct);
         await uow.SaveChangesAsync(ct);
 
-        var token = await userManager.GenerateEmailConfirmationTokenAsync(user);
-        await emailService.SendEmailConfirmationAsync(user.Email!, token, ct);
         await emailService.SendWelcomeAsync(user.Email!, user.DisplayName, ct);
 
         logger.LogInformation("New user registered: {UserId} ({Email})", user.Id, user.Email);
@@ -237,70 +235,6 @@ public class AuthService(
             signingCredentials: credentials);
 
         return new JwtSecurityTokenHandler().WriteToken(token);
-    }
-
-    public async Task<ResultModel<AuthResponse>> GoogleLoginAsync(GoogleLoginRequest request, CancellationToken ct = default)
-    {
-        var clientId = configuration["Google:ClientId"];
-        if (string.IsNullOrWhiteSpace(clientId) || clientId == "PENDIENTE")
-            return ResultModel<AuthResponse>.BadRequest("Google OAuth is not configured.");
-
-        GoogleJsonWebSignature.Payload payload;
-        try
-        {
-            var settings = new GoogleJsonWebSignature.ValidationSettings
-            {
-                Audience = [clientId]
-            };
-            payload = await GoogleJsonWebSignature.ValidateAsync(request.IdToken, settings);
-        }
-        catch (InvalidJwtException)
-        {
-            return ResultModel<AuthResponse>.Unauthorized("Invalid Google token.");
-        }
-
-        var user = await userManager.FindByEmailAsync(payload.Email);
-
-        if (user is not null)
-        {
-            if (!user.IsActive)
-                return ResultModel<AuthResponse>.Forbidden("Account is disabled.");
-
-            var logins = await userManager.GetLoginsAsync(user);
-            if (!logins.Any(l => l.LoginProvider == "Google"))
-                await userManager.AddLoginAsync(user, new UserLoginInfo("Google", payload.Subject, "Google"));
-        }
-        else
-        {
-            user = new ApplicationUser
-            {
-                Email = payload.Email,
-                UserName = payload.Email.Split('@')[0],
-                DisplayName = payload.Name ?? payload.Email.Split('@')[0],
-                EmailConfirmed = true,
-                AvatarUrl = payload.Picture,
-                IsActive = true
-            };
-
-            var createResult = await userManager.CreateAsync(user);
-            if (!createResult.Succeeded)
-            {
-                var errors = string.Join(", ", createResult.Errors.Select(e => e.Description));
-                return ResultModel<AuthResponse>.BadRequest(errors);
-            }
-
-            await userManager.AddLoginAsync(user, new UserLoginInfo("Google", payload.Subject, "Google"));
-            await userManager.AddToRoleAsync(user, "Reader");
-
-            var profileSlug = SlugHelper.Generate(user.UserName!);
-            await uow.BlogProfiles.AddAsync(new BlogProfile { UserId = user.Id, Slug = profileSlug }, ct);
-            await uow.SaveChangesAsync(ct);
-
-            logger.LogInformation("New user registered via Google: {UserId} ({Email})", user.Id, user.Email);
-        }
-
-        var response = await BuildAuthResponseAsync(user, ct);
-        return ResultModel<AuthResponse>.Ok(response);
     }
 
     private async Task<string> CreateRefreshTokenAsync(Guid userId, CancellationToken ct)

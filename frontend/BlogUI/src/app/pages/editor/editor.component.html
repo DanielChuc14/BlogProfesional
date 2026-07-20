@@ -21,7 +21,7 @@
       <div>
         <label class="label" for="title">{{ 'editor_title' | translate }}</label>
         <input id="title" type="text" class="input text-lg font-semibold"
-          placeholder="Your post title..."
+          [placeholder]="'editor_titlePlaceholder' | translate"
           [(ngModel)]="title" name="title" />
       </div>
 
@@ -30,7 +30,7 @@
           {{ 'editor_excerpt' | translate }} <span class="text-gray-400 font-normal">{{ 'editor_optional' | translate }}</span>
         </label>
         <textarea id="excerpt" class="input resize-none" rows="2"
-          placeholder="Brief summary shown in the feed..."
+          [placeholder]="'editor_excerptPlaceholder' | translate"
           [(ngModel)]="excerpt" name="excerpt"></textarea>
       </div>
 
@@ -65,7 +65,7 @@
       <div>
         <label class="label" for="body">{{ 'editor_content' | translate }}</label>
         <textarea id="body" class="input resize-y font-mono text-sm" rows="20"
-          placeholder="Write your post here..."
+          [placeholder]="'editor_bodyPlaceholder' | translate"
           [(ngModel)]="body" name="body"></textarea>
       </div>
 

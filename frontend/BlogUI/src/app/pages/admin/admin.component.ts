@@ -197,9 +197,9 @@ export class AdminComponent implements OnInit {
         this.selectedUser.update(u => u ? { ...u, roles: [...u.roles, role] } : u);
         this.users.update(list => list.map(u => u.id === user.id ? { ...u, roles: [...u.roles, role] } : u));
         this.roleToAssign = '';
-        this.toast.success('Role assigned.');
+        this.toast.success('toast_roleAssigned');
       },
-      error: () => this.toast.error('Failed to assign role.'),
+      error: () => this.toast.error('toast_failedToAssignRole'),
     });
   }
 
@@ -210,9 +210,9 @@ export class AdminComponent implements OnInit {
       next: () => {
         this.selectedUser.update(u => u ? { ...u, roles: u.roles.filter(r => r !== role) } : u);
         this.users.update(list => list.map(u => u.id === user.id ? { ...u, roles: u.roles.filter(r => r !== role) } : u));
-        this.toast.success('Role removed.');
+        this.toast.success('toast_roleRemoved');
       },
-      error: () => this.toast.error('Failed to remove role.'),
+      error: () => this.toast.error('toast_failedToRemoveRole'),
     });
   }
 
@@ -231,7 +231,7 @@ export class AdminComponent implements OnInit {
         }
         this.toast.success(`Role changed to ${newRole}.`);
       },
-      error: () => this.toast.error('Failed to change role.'),
+      error: () => this.toast.error('toast_failedToChangeRole'),
     });
   }
 
@@ -241,7 +241,7 @@ export class AdminComponent implements OnInit {
         this.users.update(list => list.map(u => u.id === user.id ? { ...u, isActive: false } : u));
         this.toast.success(`${user.username} has been banned.`);
       },
-      error: () => this.toast.error('Failed to ban user.'),
+      error: () => this.toast.error('toast_failedToBanUser'),
     });
   }
 
@@ -251,7 +251,7 @@ export class AdminComponent implements OnInit {
         this.users.update(list => list.map(u => u.id === user.id ? { ...u, isActive: true } : u));
         this.toast.success(`${user.username} has been unbanned.`);
       },
-      error: () => this.toast.error('Failed to unban user.'),
+      error: () => this.toast.error('toast_failedToUnbanUser'),
     });
   }
 
@@ -261,9 +261,9 @@ export class AdminComponent implements OnInit {
       this.adminSvc.deleteUser(user.id).subscribe({
         next: () => {
           this.users.update(list => list.filter(u => u.id !== user.id));
-          this.toast.success('User deleted.');
+          this.toast.success('toast_userDeleted');
         },
-        error: () => this.toast.error('Failed to delete user.'),
+        error: () => this.toast.error('toast_failedToDeleteUser'),
       });
     };
   }
@@ -287,7 +287,7 @@ export class AdminComponent implements OnInit {
         this.newRoleName = '';
         this.toast.success(`Role "${role.name}" created.`);
       },
-      error: () => this.toast.error('Failed to create role.'),
+      error: () => this.toast.error('toast_failedToCreateRole'),
     });
   }
 
@@ -297,9 +297,9 @@ export class AdminComponent implements OnInit {
       this.adminSvc.deleteRole(name).subscribe({
         next: () => {
           this.roles.update(r => r.filter(x => x.name !== name));
-          this.toast.success('Role deleted.');
+          this.toast.success('toast_roleDeleted');
         },
-        error: () => this.toast.error('Failed to delete role.'),
+        error: () => this.toast.error('toast_failedToDeleteRole'),
       });
     };
   }
@@ -323,7 +323,7 @@ export class AdminComponent implements OnInit {
         this.newTagName = '';
         this.toast.success(`Tag "${tag.name}" created.`);
       },
-      error: () => this.toast.error('Failed to create tag.'),
+      error: () => this.toast.error('toast_failedToCreateTag'),
     });
   }
 
@@ -344,9 +344,9 @@ export class AdminComponent implements OnInit {
       next: updated => {
         this.tags.update(list => list.map(t => t.id === id ? updated : t));
         this.editingTagId.set(null);
-        this.toast.success('Tag updated.');
+        this.toast.success('toast_tagUpdated');
       },
-      error: () => this.toast.error('Failed to update tag.'),
+      error: () => this.toast.error('toast_failedToUpdateTag'),
     });
   }
 
@@ -356,9 +356,9 @@ export class AdminComponent implements OnInit {
       this.adminSvc.deleteTag(id).subscribe({
         next: () => {
           this.tags.update(t => t.filter(x => x.id !== id));
-          this.toast.success('Tag deleted.');
+          this.toast.success('toast_tagDeleted');
         },
-        error: () => this.toast.error('Failed to delete tag.'),
+        error: () => this.toast.error('toast_failedToDeleteTag'),
       });
     };
   }
@@ -384,9 +384,9 @@ export class AdminComponent implements OnInit {
       this.adminSvc.unpublishPost(post.id, 'Unpublished by admin').subscribe({
         next: () => {
           this.adminPosts.update(list => list.map(p => p.id === post.id ? { ...p, status: 'Archived' } : p));
-          this.toast.success('Post unpublished.');
+          this.toast.success('toast_postUnpublished');
         },
-        error: () => this.toast.error('Failed to unpublish post.'),
+        error: () => this.toast.error('toast_failedToUnpublishPost'),
       });
     };
   }
@@ -397,9 +397,9 @@ export class AdminComponent implements OnInit {
       this.adminSvc.forceDeletePost(id).subscribe({
         next: () => {
           this.adminPosts.update(p => p.filter(x => x.id !== id));
-          this.toast.success('Post deleted.');
+          this.toast.success('toast_postDeleted');
         },
-        error: () => this.toast.error('Failed to delete post.'),
+        error: () => this.toast.error('toast_failedToDeletePost'),
       });
     };
   }
@@ -425,9 +425,9 @@ export class AdminComponent implements OnInit {
       this.adminSvc.deleteComment(id).subscribe({
         next: () => {
           this.comments.update(list => list.filter(c => c.id !== id));
-          this.toast.success('Comment deleted.');
+          this.toast.success('toast_commentDeleted');
         },
-        error: () => this.toast.error('Failed to delete comment.'),
+        error: () => this.toast.error('toast_failedToDeleteComment'),
       });
     };
   }
@@ -451,12 +451,12 @@ export class AdminComponent implements OnInit {
     this.adminSvc.updateSettings(this.settingsEdits).subscribe({
       next: () => {
         this.settingsSaving.set(false);
-        this.toast.success('Settings saved.');
+        this.toast.success('toast_settingsSaved');
         this.settings.update(list => list.map(s => ({ ...s, value: this.settingsEdits[s.key] ?? s.value })));
       },
       error: () => {
         this.settingsSaving.set(false);
-        this.toast.error('Failed to save settings.');
+        this.toast.error('toast_failedToSaveSettings');
       },
     });
   }
@@ -465,7 +465,7 @@ export class AdminComponent implements OnInit {
     const key = prompt('Setting key (e.g. platform:name):');
     if (!key?.trim()) return;
     if (this.settings().some(s => s.key === key.trim())) {
-      this.toast.error('Setting key already exists.');
+      this.toast.error('toast_settingKeyAlreadyExists');
       return;
     }
     const newSetting = { key: key.trim(), value: '', updatedAt: new Date().toISOString() };
@@ -494,11 +494,11 @@ export class AdminComponent implements OnInit {
         this.newRestrictedIsRegex   = false;
         this.newRestrictedSeverity  = 'Block';
         this.restrictedSaving.set(false);
-        this.toast.success('Restricted word added.');
+        this.toast.success('toast_restrictedWordAdded');
       },
       error: () => {
         this.restrictedSaving.set(false);
-        this.toast.error('Failed to add restricted word.');
+        this.toast.error('toast_failedToAddRestrictedWord');
       },
     });
   }
@@ -509,9 +509,9 @@ export class AdminComponent implements OnInit {
       this.adminSvc.deleteRestrictedWord(id).subscribe({
         next: () => {
           this.restrictedWords.update(list => list.filter(w => w.id !== id));
-          this.toast.success('Restricted word removed.');
+          this.toast.success('toast_restrictedWordRemoved');
         },
-        error: () => this.toast.error('Failed to remove restricted word.'),
+        error: () => this.toast.error('toast_failedToRemoveRestrictedWord'),
       });
     };
   }
@@ -556,11 +556,11 @@ export class AdminComponent implements OnInit {
         ));
         this.reviewSaving.set(false);
         this.closeReview();
-        this.toast.success('Report reviewed.');
+        this.toast.success('toast_reportReviewed');
       },
       error: () => {
         this.reviewSaving.set(false);
-        this.toast.error('Failed to review report.');
+        this.toast.error('toast_failedToReviewReport');
       },
     });
   }
@@ -615,7 +615,7 @@ export class AdminComponent implements OnInit {
       },
       error: () => {
         this.suspendSaving.set(false);
-        this.toast.error('Failed to suspend user.');
+        this.toast.error('toast_failedToSuspendUser');
       },
     });
   }
@@ -630,7 +630,7 @@ export class AdminComponent implements OnInit {
         }
         this.toast.success(`Suspension lifted for ${user.username}.`);
       },
-      error: () => this.toast.error('Failed to lift suspension.'),
+      error: () => this.toast.error('toast_failedToLiftSuspension'),
     });
   }
 
@@ -673,7 +673,7 @@ export class AdminComponent implements OnInit {
       },
       error: () => {
         this.languageSaving.set(false);
-        this.toast.error('Failed to create language.');
+        this.toast.error('toast_failedToCreateLanguage');
       },
     });
   }
@@ -712,7 +712,7 @@ export class AdminComponent implements OnInit {
             },
             error: () => {
               this.languageSaving.set(false);
-              this.toast.error('Metadata saved but translation upload failed.');
+              this.toast.error('toast_metadataSavedButTranslationUploadFailed');
             },
           });
         } else {
@@ -723,7 +723,7 @@ export class AdminComponent implements OnInit {
       },
       error: () => {
         this.languageSaving.set(false);
-        this.toast.error('Failed to update language.');
+        this.toast.error('toast_failedToUpdateLanguage');
       },
     });
   }
@@ -741,7 +741,7 @@ export class AdminComponent implements OnInit {
         ));
         this.toast.success(`Language '${lang.code}' ${lang.isActive ? 'deactivated' : 'activated'}.`);
       },
-      error: () => this.toast.error('Failed to toggle language.'),
+      error: () => this.toast.error('toast_failedToToggleLanguage'),
     });
   }
 
@@ -753,7 +753,7 @@ export class AdminComponent implements OnInit {
           this.languages.update(list => list.filter(l => l.code !== lang.code));
           this.toast.success(`Language '${lang.code}' deleted.`);
         },
-        error: () => this.toast.error('Failed to delete language.'),
+        error: () => this.toast.error('toast_failedToDeleteLanguage'),
       });
     };
   }

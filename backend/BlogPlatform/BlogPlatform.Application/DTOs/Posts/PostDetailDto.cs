@@ -22,6 +22,9 @@ public class PostDetailDto
     public int ViewCount { get; init; }
     public int LikesCount { get; init; }
     public int CommentsCount { get; init; }
+    // Permite que la UI pinte el corazon relleno al cargar, sin depender
+    // de que el usuario haya hecho clic en esta sesion.
+    public bool LikedByCurrentUser { get; init; }
     public bool IsAdultContent { get; init; }
     public IReadOnlyList<PostTagDto> Tags { get; init; } = [];
     public AuthorDto Author { get; init; } = null!;

@@ -34,6 +34,7 @@ export interface PostDetailDto {
   viewCount: number;
   likesCount: number;
   commentsCount: number;
+  likedByCurrentUser: boolean;
   publishedAt: string | null;
   createdAt: string;
   updatedAt: string;

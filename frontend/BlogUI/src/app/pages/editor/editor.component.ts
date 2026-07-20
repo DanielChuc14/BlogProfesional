@@ -8,6 +8,7 @@ import { TagDto, PostDetailDto } from '../../core/models';
 import { SpinnerComponent } from '../../shared/components/spinner/spinner.component';
 import { HttpErrorResponse } from '@angular/common/http';
 import { TranslatePipe } from '../../core/pipes/translate.pipe';
+import { extractApiError } from '../../core/utils/api-error';
 
 @Component({
   selector: 'app-editor',
@@ -105,23 +106,23 @@ export class EditorComponent implements OnInit {
           this.postSvc.publish(post.id).subscribe({
             next: () => {
               this.saving.set(false);
-              this.toast.success('Post published!');
+              this.toast.success('toast_postPublished');
               this.router.navigate(['/post', post.slug]);
             },
             error: (err: HttpErrorResponse) => {
               this.saving.set(false);
-              this.errorMsg.set(err.error?.error ?? err.error?.title ?? 'Failed to publish post.');
+              this.errorMsg.set(extractApiError(err, 'toast_failedToPublishPost'));
             },
           });
         } else {
           this.saving.set(false);
-          this.toast.success('Draft saved.');
+          this.toast.success('toast_draftSaved');
           this.router.navigate(['/editor', post.id]);
         }
       },
       error: (err: HttpErrorResponse) => {
         this.saving.set(false);
-        this.errorMsg.set(err.error?.error ?? err.error?.title ?? 'Failed to save post.');
+        this.errorMsg.set(extractApiError(err, 'toast_failedToSavePost'));
       },
     });
   }

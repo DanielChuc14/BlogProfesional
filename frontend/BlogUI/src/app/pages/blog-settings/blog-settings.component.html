@@ -271,15 +271,16 @@
             <!-- Add notice form -->
             <div class="bg-gray-50 rounded-lg p-4 mb-6 flex flex-col gap-3">
               <p class="text-sm font-medium text-gray-700">{{ 'settings_newNotice' | translate }}</p>
-              <input type="text" class="input" placeholder="Title..." [(ngModel)]="newNoticeTitle" name="noticeTitle" />
-              <textarea class="input resize-none" rows="2" placeholder="Content..."
+              <input type="text" class="input" [placeholder]="'profile_noticeTitlePlaceholder' | translate" [(ngModel)]="newNoticeTitle" name="noticeTitle" />
+              <textarea class="input resize-none" rows="2" [placeholder]="'profile_noticeContentPlaceholder' | translate"
                 [(ngModel)]="newNoticeContent" name="noticeContent"></textarea>
               <div class="flex flex-wrap items-center gap-3">
+                <!-- value queda en ingles: es el valor que espera el enum del backend. -->
                 <select class="input w-auto" [(ngModel)]="newNoticeType" name="noticeType">
-                  <option value="Info">Info</option>
-                  <option value="Warning">Warning</option>
-                  <option value="Success">Success</option>
-                  <option value="Promo">Promo</option>
+                  <option value="Info">{{ 'noticeType_Info' | translate }}</option>
+                  <option value="Warning">{{ 'noticeType_Warning' | translate }}</option>
+                  <option value="Success">{{ 'noticeType_Success' | translate }}</option>
+                  <option value="Promo">{{ 'noticeType_Promo' | translate }}</option>
                 </select>
                 <label class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
                   <input type="checkbox" [(ngModel)]="newNoticeActive" name="noticeActive" class="w-4 h-4 rounded" />
@@ -304,7 +305,7 @@
                     <div class="flex-1 min-w-0">
                       <p class="text-sm font-semibold">{{ notice.title }}</p>
                       <p class="text-xs opacity-80 mt-0.5">{{ notice.content }}</p>
-                      <p class="text-xs opacity-60 mt-1">{{ notice.type }} · {{ notice.isActive ? ('settings_activeLabel' | translate) : 'Inactive' }}</p>
+                      <p class="text-xs opacity-60 mt-1">{{ 'noticeType_' + notice.type | translate }} · {{ (notice.isActive ? 'settings_activeLabel' : 'settings_inactiveLabel') | translate }}</p>
                     </div>
                     <button class="btn btn-danger btn-sm text-xs px-2 shrink-0" (click)="deleteNotice(notice.id)">
                       {{ 'common_delete' | translate }}
@@ -370,7 +371,7 @@
 
             <!-- Add filter -->
             <div class="flex gap-2 mb-6">
-              <input type="text" class="input flex-1" placeholder="Word or phrase..."
+              <input type="text" class="input flex-1" [placeholder]="'profile_filterWordPlaceholder' | translate"
                 [(ngModel)]="newFilterWord" name="filterWord" />
               <button class="btn btn-primary btn-sm shrink-0" [disabled]="filterSaving()" (click)="addWordFilter()">
                 @if (filterSaving()) { {{ 'settings_adding' | translate }} } @else { {{ 'common_add' | translate }} }

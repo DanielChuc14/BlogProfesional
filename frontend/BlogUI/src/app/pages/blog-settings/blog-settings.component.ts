@@ -154,17 +154,17 @@ export class BlogSettingsComponent implements OnInit {
         next: p => {
           this.profile.set(p);
           if (p.avatarUrl) this.auth.updateAvatarUrl(p.avatarUrl);
-          this.toast.success('Profile photo updated.');
+          this.toast.success('toast_profilePhotoUpdated');
         },
-        error: () => this.toast.error('Failed to upload photo.'),
+        error: () => this.toast.error('toast_failedToUploadPhoto'),
       });
     } else if (type === 'banner') {
       this.profileSvc.uploadBanner(file).subscribe({
         next: p => {
           this.profile.set(p);
-          this.toast.success('Cover photo updated.');
+          this.toast.success('toast_coverPhotoUpdated');
         },
-        error: () => this.toast.error('Failed to upload cover.'),
+        error: () => this.toast.error('toast_failedToUploadCover'),
       });
     }
   }
@@ -195,11 +195,11 @@ export class BlogSettingsComponent implements OnInit {
       next: updated => {
         this.profile.set(updated);
         this.profileSaving.set(false);
-        this.toast.success('Profile saved.');
+        this.toast.success('toast_profileSaved');
       },
       error: () => {
         this.profileSaving.set(false);
-        this.toast.error('Failed to save profile.');
+        this.toast.error('toast_failedToSaveProfile');
       },
     });
   }
@@ -230,11 +230,11 @@ export class BlogSettingsComponent implements OnInit {
       next: theme => {
         this.profile.update(p => p ? { ...p, theme } : p);
         this.themeSaving.set(false);
-        this.toast.success('Appearance saved.');
+        this.toast.success('toast_appearanceSaved');
       },
       error: () => {
         this.themeSaving.set(false);
-        this.toast.error('Failed to save appearance.');
+        this.toast.error('toast_failedToSaveAppearance');
       },
     });
   }
@@ -265,11 +265,11 @@ export class BlogSettingsComponent implements OnInit {
         this.newNoticeTitle = '';
         this.newNoticeContent = '';
         this.noticeSaving.set(false);
-        this.toast.success('Notice added.');
+        this.toast.success('toast_noticeAdded');
       },
       error: () => {
         this.noticeSaving.set(false);
-        this.toast.error('Failed to add notice.');
+        this.toast.error('toast_failedToAddNotice');
       },
     });
   }
@@ -278,9 +278,9 @@ export class BlogSettingsComponent implements OnInit {
     this.profileSvc.deleteNotice(id).subscribe({
       next: () => {
         this.notices.update(list => list.filter(n => n.id !== id));
-        this.toast.success('Notice deleted.');
+        this.toast.success('toast_noticeDeleted');
       },
-      error: () => this.toast.error('Failed to delete notice.'),
+      error: () => this.toast.error('toast_failedToDeleteNotice'),
     });
   }
 
@@ -311,11 +311,11 @@ export class BlogSettingsComponent implements OnInit {
         this.newLinkUrl   = '';
         this.newLinkIcon  = '';
         this.linkSaving.set(false);
-        this.toast.success('Link added.');
+        this.toast.success('toast_linkAdded');
       },
       error: () => {
         this.linkSaving.set(false);
-        this.toast.error('Failed to add link.');
+        this.toast.error('toast_failedToAddLink');
       },
     });
   }
@@ -324,9 +324,9 @@ export class BlogSettingsComponent implements OnInit {
     this.profileSvc.deleteQuickLink(id).subscribe({
       next: () => {
         this.quickLinks.update(list => list.filter(l => l.id !== id));
-        this.toast.success('Link deleted.');
+        this.toast.success('toast_linkDeleted');
       },
-      error: () => this.toast.error('Failed to delete link.'),
+      error: () => this.toast.error('toast_failedToDeleteLink'),
     });
   }
 
@@ -348,11 +348,11 @@ export class BlogSettingsComponent implements OnInit {
         this.wordFilters.update(list => [...list, filter]);
         this.newFilterWord = '';
         this.filterSaving.set(false);
-        this.toast.success('Filter added.');
+        this.toast.success('toast_filterAdded');
       },
       error: () => {
         this.filterSaving.set(false);
-        this.toast.error('Failed to add filter.');
+        this.toast.error('toast_failedToAddFilter');
       },
     });
   }
@@ -361,9 +361,9 @@ export class BlogSettingsComponent implements OnInit {
     this.profileSvc.deleteWordFilter(id).subscribe({
       next: () => {
         this.wordFilters.update(list => list.filter(f => f.id !== id));
-        this.toast.success('Filter removed.');
+        this.toast.success('toast_filterRemoved');
       },
-      error: () => this.toast.error('Failed to remove filter.'),
+      error: () => this.toast.error('toast_failedToRemoveFilter'),
     });
   }
 }

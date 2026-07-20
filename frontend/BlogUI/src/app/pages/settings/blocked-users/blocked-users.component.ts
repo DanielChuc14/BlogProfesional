@@ -4,12 +4,13 @@ import { BlockService } from '../../../core/services/block.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { BlockedUserDto } from '../../../core/models';
 import { SpinnerComponent } from '../../../shared/components/spinner/spinner.component';
+import { TranslatePipe } from '../../../core/pipes/translate.pipe';
 
 @Component({
   selector: 'app-blocked-users',
   standalone: true,
   templateUrl: './blocked-users.component.html',
-  imports: [RouterLink, SpinnerComponent],
+  imports: [RouterLink, SpinnerComponent, TranslatePipe],
 })
 export class BlockedUsersComponent implements OnInit {
   private readonly blockSvc = inject(BlockService);
@@ -38,11 +39,11 @@ export class BlockedUsersComponent implements OnInit {
       next: () => {
         this.items.update(list => list.filter(u => u.userId !== userId));
         this.unblocking.set(null);
-        this.toast.success('User unblocked.');
+        this.toast.success('toast_userUnblocked');
       },
       error: () => {
         this.unblocking.set(null);
-        this.toast.error('Failed to unblock.');
+        this.toast.error('toast_failedToUnblock');
       },
     });
   }

@@ -166,11 +166,11 @@ export class ProfileComponent implements OnInit, OnDestroy {
         this.profile.set(p);
         if (p.avatarUrl) this.auth.updateAvatarUrl(p.avatarUrl);
         this.avatarSaving.set(false);
-        this.toast.success('Photo updated.');
+        this.toast.success('toast_photoUpdated');
       },
       error: () => {
         this.avatarSaving.set(false);
-        this.toast.error('Failed to update photo.');
+        this.toast.error('toast_failedToUpdatePhoto');
       },
     });
   }
@@ -183,11 +183,11 @@ export class ProfileComponent implements OnInit, OnDestroy {
       next: p => {
         this.profile.set(p);
         this.bannerSaving.set(false);
-        this.toast.success('Banner updated.');
+        this.toast.success('toast_bannerUpdated');
       },
       error: () => {
         this.bannerSaving.set(false);
-        this.toast.error('Failed to update banner.');
+        this.toast.error('toast_failedToUpdateBanner');
       },
     });
   }
@@ -230,11 +230,11 @@ export class ProfileComponent implements OnInit, OnDestroy {
         this.profile.set(updated);
         this.saving.set(false);
         this.editMode.set(false);
-        this.toast.success('Profile updated.');
+        this.toast.success('toast_profileUpdated');
       },
       error: () => {
         this.saving.set(false);
-        this.toast.error('Failed to update profile.');
+        this.toast.error('toast_failedToUpdateProfile');
       },
     });
   }
@@ -270,11 +270,11 @@ export class ProfileComponent implements OnInit, OnDestroy {
         this.applyTheme(theme);
         this.themeSaving.set(false);
         this.themeMode.set(false);
-        this.toast.success('Theme saved.');
+        this.toast.success('toast_themeSaved');
       },
       error: () => {
         this.themeSaving.set(false);
-        this.toast.error('Failed to save theme.');
+        this.toast.error('toast_failedToSaveTheme');
       },
     });
   }
@@ -312,11 +312,11 @@ export class ProfileComponent implements OnInit, OnDestroy {
         this.newNoticeTitle = '';
         this.newNoticeContent = '';
         this.noticeSaving.set(false);
-        this.toast.success('Notice added.');
+        this.toast.success('toast_noticeAdded');
       },
       error: () => {
         this.noticeSaving.set(false);
-        this.toast.error('Failed to add notice.');
+        this.toast.error('toast_failedToAddNotice');
       },
     });
   }
@@ -329,9 +329,9 @@ export class ProfileComponent implements OnInit, OnDestroy {
           ...p,
           activeNotices: p.activeNotices.filter(n => n.id !== id)
         } : p);
-        this.toast.success('Notice deleted.');
+        this.toast.success('toast_noticeDeleted');
       },
-      error: () => this.toast.error('Failed to delete notice.'),
+      error: () => this.toast.error('toast_failedToDeleteNotice'),
     });
   }
 
@@ -356,11 +356,11 @@ export class ProfileComponent implements OnInit, OnDestroy {
         this.newLinkUrl = '';
         this.newLinkIcon = '';
         this.linkSaving.set(false);
-        this.toast.success('Link added.');
+        this.toast.success('toast_linkAdded');
       },
       error: () => {
         this.linkSaving.set(false);
-        this.toast.error('Failed to add link.');
+        this.toast.error('toast_failedToAddLink');
       },
     });
   }
@@ -369,9 +369,9 @@ export class ProfileComponent implements OnInit, OnDestroy {
     this.profileSvc.deleteQuickLink(id).subscribe({
       next: () => {
         this.profile.update(p => p ? { ...p, quickLinks: p.quickLinks.filter(l => l.id !== id) } : p);
-        this.toast.success('Link deleted.');
+        this.toast.success('toast_linkDeleted');
       },
-      error: () => this.toast.error('Failed to delete link.'),
+      error: () => this.toast.error('toast_failedToDeleteLink'),
     });
   }
 
@@ -400,11 +400,11 @@ export class ProfileComponent implements OnInit, OnDestroy {
         this.wordFilters.update(list => [...list, filter]);
         this.newFilterWord = '';
         this.filterSaving.set(false);
-        this.toast.success('Word filter added.');
+        this.toast.success('toast_wordFilterAdded');
       },
       error: () => {
         this.filterSaving.set(false);
-        this.toast.error('Failed to add filter.');
+        this.toast.error('toast_failedToAddFilter');
       },
     });
   }
@@ -413,9 +413,9 @@ export class ProfileComponent implements OnInit, OnDestroy {
     this.profileSvc.deleteWordFilter(id).subscribe({
       next: () => {
         this.wordFilters.update(list => list.filter(f => f.id !== id));
-        this.toast.success('Filter removed.');
+        this.toast.success('toast_filterRemoved');
       },
-      error: () => this.toast.error('Failed to remove filter.'),
+      error: () => this.toast.error('toast_failedToRemoveFilter'),
     });
   }
 
@@ -431,7 +431,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
           this.profile.update(pr => pr ? { ...pr, isFollowing: false, followersCount: pr.followersCount - 1 } : pr);
           this.followLoading.set(false);
         },
-        error: () => { this.toast.error('Failed to unfollow.'); this.followLoading.set(false); },
+        error: () => { this.toast.error('toast_failedToUnfollow'); this.followLoading.set(false); },
       });
     } else {
       this.profileSvc.follow(p.slug).subscribe({
@@ -439,7 +439,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
           this.profile.update(pr => pr ? { ...pr, isFollowing: true, followersCount: pr.followersCount + 1 } : pr);
           this.followLoading.set(false);
         },
-        error: () => { this.toast.error('Failed to follow.'); this.followLoading.set(false); },
+        error: () => { this.toast.error('toast_failedToFollow'); this.followLoading.set(false); },
       });
     }
   }
@@ -460,18 +460,18 @@ export class ProfileComponent implements OnInit, OnDestroy {
         next: () => {
           this.profile.update(pr => pr ? { ...pr, isBlocked: false } : pr);
           this.blockLoading.set(false);
-          this.toast.success('User unblocked.');
+          this.toast.success('toast_userUnblocked');
         },
-        error: () => { this.toast.error('Failed to unblock.'); this.blockLoading.set(false); },
+        error: () => { this.toast.error('toast_failedToUnblock'); this.blockLoading.set(false); },
       });
     } else {
       this.blockSvc.block(p.userId).subscribe({
         next: () => {
           this.profile.update(pr => pr ? { ...pr, isBlocked: true, isFollowing: false } : pr);
           this.blockLoading.set(false);
-          this.toast.success('User blocked.');
+          this.toast.success('toast_userBlocked');
         },
-        error: () => { this.toast.error('Failed to block.'); this.blockLoading.set(false); },
+        error: () => { this.toast.error('toast_failedToBlock'); this.blockLoading.set(false); },
       });
     }
   }

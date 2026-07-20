@@ -8,6 +8,7 @@ import { ToastService } from '../../core/services/toast.service';
 import { BloggerDashboardDto } from '../../core/models';
 import { SpinnerComponent } from '../../shared/components/spinner/spinner.component';
 import { TranslatePipe } from '../../core/pipes/translate.pipe';
+import { extractApiError } from '../../core/utils/api-error';
 
 @Component({
   selector: 'app-dashboard',
@@ -56,7 +57,7 @@ export class DashboardComponent implements OnInit {
       },
       error: (err) => {
         this.nlSending.set(false);
-        this.toast.error(err.error?.error ?? err.error?.title ?? 'Failed to initiate newsletter.');
+        this.toast.error(extractApiError(err, 'toast_failedToInitiateNewsletter'));
       },
     });
   }
@@ -71,11 +72,11 @@ export class DashboardComponent implements OnInit {
         this.nlPreview.set(null);
         this.newsletterSubject = '';
         this.newsletterBody    = '';
-        this.toast.success('Newsletter sent successfully!');
+        this.toast.success('toast_newsletterSentSuccessfully');
       },
       error: (err) => {
         this.nlSending.set(false);
-        this.toast.error(err.error?.error ?? err.error?.title ?? 'Failed to send newsletter.');
+        this.toast.error(extractApiError(err, 'toast_failedToSendNewsletter'));
       },
     });
   }

@@ -512,11 +512,18 @@ public class ProfileService(
         if (profile is null)
             return ResultModel<UserPreferencesDto>.NotFound("Profile not found.");
 
+        // Las migraciones que anadieron estas columnas usaron defaultValue: "",
+        // por lo que los usuarios anteriores tienen cadenas vacias. Sin este
+        // fallback el selector de idioma de Configuracion aparece en blanco.
         return ResultModel<UserPreferencesDto>.Ok(new UserPreferencesDto
         {
-            PreferredLanguage          = profile.User.PreferredLanguage,
+            PreferredLanguage = string.IsNullOrWhiteSpace(profile.User.PreferredLanguage)
+                ? "en"
+                : profile.User.PreferredLanguage,
             ReceiveEmailNotifications  = profile.User.ReceiveEmailNotifications,
-            ProfileVisibility          = profile.User.ProfileVisibility,
+            ProfileVisibility = string.IsNullOrWhiteSpace(profile.User.ProfileVisibility)
+                ? "public"
+                : profile.User.ProfileVisibility,
         });
     }
 

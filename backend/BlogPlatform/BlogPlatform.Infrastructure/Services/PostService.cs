@@ -69,7 +69,7 @@ public class PostService(
         });
     }
 
-    public async Task<ResultModel<PostDetailDto>> GetBySlugAsync(string slug, CancellationToken ct = default)
+    public async Task<ResultModel<PostDetailDto>> GetBySlugAsync(string slug, Guid? viewerUserId = null, CancellationToken ct = default)
     {
         var post = await uow.Posts.Query()
             .Include(p => p.BlogProfile).ThenInclude(bp => bp.User)
@@ -84,7 +84,10 @@ public class PostService(
         if (post.Status != PostStatus.Published)
             return ResultModel<PostDetailDto>.NotFound("Post not found.");
 
-        return ResultModel<PostDetailDto>.Ok(MapToDetail(post));
+        var liked = viewerUserId is not null && await uow.PostLikes.Query()
+            .AnyAsync(pl => pl.PostId == post.Id && pl.UserId == viewerUserId.Value, ct);
+
+        return ResultModel<PostDetailDto>.Ok(MapToDetail(post, liked));
     }
 
     public async Task<ResultModel<PostDetailDto>> GetByIdAsync(Guid userId, Guid postId, CancellationToken ct = default)
@@ -331,13 +334,15 @@ public class PostService(
         var pageSize = Math.Clamp(query.PageSize, 1, 50);
 
         var sanitized = query.Term.Trim();
-        var tsQuery = EF.Functions.PlainToTsQuery("english", sanitized);
 
+        // PlainToTsQuery debe evaluarse dentro del arbol de expresion. Si se asigna
+        // antes a una variable local, EF no puede traducirlo y lanza InvalidOperationException.
         var q = uow.Posts.Query()
             .Include(p => p.BlogProfile).ThenInclude(bp => bp.User)
             .Include(p => p.PostTags).ThenInclude(pt => pt.Tag)
             .Where(p => p.Status == PostStatus.Published)
-            .Where(p => EF.Property<NpgsqlTsVector>(p, "SearchVector").Matches(tsQuery));
+            .Where(p => EF.Property<NpgsqlTsVector>(p, "SearchVector")
+                .Matches(EF.Functions.PlainToTsQuery("english", sanitized)));
 
         if (!string.IsNullOrEmpty(query.Cursor))
         {
@@ -563,8 +568,9 @@ public class PostService(
         CreatedAt = post.CreatedAt
     };
 
-    private static PostDetailDto MapToDetail(Post post) => new()
+    private static PostDetailDto MapToDetail(Post post, bool likedByCurrentUser = false) => new()
     {
+        LikedByCurrentUser = likedByCurrentUser,
         Id = post.Id,
         Title = post.Title,
         Slug = post.Slug,

@@ -37,7 +37,7 @@ public static class DependencyInjection
             opts.Lockout.MaxFailedAccessAttempts = 5;
             opts.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
             opts.User.RequireUniqueEmail = true;
-            opts.SignIn.RequireConfirmedEmail = true;
+            opts.SignIn.RequireConfirmedEmail = false;
         })
         .AddEntityFrameworkStores<AppDbContext>()
         .AddDefaultTokenProviders();

@@ -80,18 +80,6 @@ public class AuthController(IAuthService authService) : ControllerBase
     public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest request, CancellationToken ct)
         => (await authService.ResetPasswordAsync(request, ct)).ToActionResult(this);
 
-    [HttpPost("google")]
-    public async Task<IActionResult> Google([FromBody] GoogleLoginRequest request, CancellationToken ct)
-    {
-        var result = await authService.GoogleLoginAsync(request, ct);
-        if (result.IsSuccess && result.Data?.RefreshToken is not null)
-        {
-            SetRefreshTokenCookie(result.Data.RefreshToken);
-            result.Data.RefreshToken = null;
-        }
-        return result.ToActionResult(this);
-    }
-
     private void SetRefreshTokenCookie(string token)
     {
         Response.Cookies.Append(RefreshTokenCookie, token, new CookieOptions

@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../../core/services/auth.service';
 import { HttpErrorResponse } from '@angular/common/http';
 import { TranslatePipe } from '../../../core/pipes/translate.pipe';
+import { extractApiError } from '../../../core/utils/api-error';
 
 @Component({
   selector: 'app-forgot-password',
@@ -28,7 +29,7 @@ export class ForgotPasswordComponent {
       next: () => { this.loading.set(false); this.sent.set(true); },
       error: (err: HttpErrorResponse) => {
         this.loading.set(false);
-        this.errorMsg.set(err.error?.error ?? err.error?.title ?? 'Something went wrong.');
+        this.errorMsg.set(extractApiError(err, 'toast_somethingWentWrong'));
       },
     });
   }

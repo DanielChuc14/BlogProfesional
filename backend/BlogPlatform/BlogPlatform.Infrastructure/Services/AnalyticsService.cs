@@ -38,6 +38,11 @@ public class AnalyticsService(
 
             var deviceType = DetectDeviceType(userAgent);
 
+            // El hash incluye la fecha, asi que esto deduplica por visitante y dia:
+            // recargar el post no vuelve a sumar una visita.
+            var alreadyViewedToday = await uow.PageViews.Query()
+                .AnyAsync(pv => pv.PostId == postId && pv.VisitorHash == hash, ct);
+
             await uow.PageViews.AddAsync(new PageView
             {
                 PostId = postId,
@@ -47,6 +52,18 @@ public class AnalyticsService(
                 Referrer = referrer is not null && referrer.Length > 512 ? referrer[..512] : referrer,
                 DeviceType = deviceType
             }, ct);
+
+            // Se registraba el PageView pero nunca se incrementaba Post.ViewCount,
+            // que es el campo que leen el detalle del post y el dashboard de Admin.
+            if (!alreadyViewedToday)
+            {
+                var post = await uow.Posts.GetByIdAsync(postId, ct);
+                if (post is not null)
+                {
+                    post.ViewCount++;
+                    uow.Posts.Update(post);
+                }
+            }
 
             await uow.SaveChangesAsync(ct);
 

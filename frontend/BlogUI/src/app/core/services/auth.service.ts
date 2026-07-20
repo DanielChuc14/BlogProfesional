@@ -1,6 +1,6 @@
 import { inject, Injectable, signal, computed } from '@angular/core';
 import { Router } from '@angular/router';
-import { Observable, tap, catchError, throwError } from 'rxjs';
+import { Observable, tap, catchError, throwError, firstValueFrom } from 'rxjs';
 import { ApiService } from './api.service';
 import { StorageService } from './storage.service';
 import {
@@ -32,14 +32,15 @@ export class AuthService {
   readonly isSuperAdmin = computed(() => this.roles().includes('SuperAdmin'));
 
   // Called by APP_INITIALIZER before any component renders.
-  // Reads and decrypts the stored session, then populates the signals.
+  // Attempts a silent refresh: the HttpOnly cookie rebuilds the session without
+  // ever persisting the access token in storage. If there is no valid cookie,
+  // refresh() clears the session and the app starts anonymous.
   async init(): Promise<void> {
-    const [token, user] = await Promise.all([
-      this.storage.getItem<string>(TOKEN_KEY),
-      this.storage.getItem<AuthResponse>(USER_KEY),
-    ]);
-    this._token.set(token);
-    this._user.set(user);
+    try {
+      await firstValueFrom(this.refresh());
+    } catch {
+      this.clearSession();
+    }
   }
 
   register(req: RegisterRequest): Observable<void> {
@@ -71,12 +72,6 @@ export class AuthService {
     );
   }
 
-  googleLogin(idToken: string): Observable<AuthResponse> {
-    return this.api.post<AuthResponse>('/api/auth/google', { idToken }).pipe(
-      tap(res => this.saveSession(res)),
-    );
-  }
-
   forgotPassword(req: ForgotPasswordRequest): Observable<void> {
     return this.api.post<void>('/api/auth/forgot-password', req);
   }
@@ -92,9 +87,7 @@ export class AuthService {
   updateAvatarUrl(url: string): void {
     const current = this._user();
     if (!current) return;
-    const updated = { ...current, avatarUrl: url };
-    this._user.set(updated);
-    void this.storage.setItem(USER_KEY, updated);
+    this._user.set({ ...current, avatarUrl: url });
   }
 
   clearSession(): void {
@@ -105,11 +98,10 @@ export class AuthService {
   }
 
   private saveSession(res: AuthResponse): void {
-    // Update signals immediately so the rest of the app reacts at once.
-    // Persist to encrypted storage async in the background.
+    // Access token lives only in memory (the signal); it is never persisted, so
+    // an XSS cannot steal it from storage. On reload the session is rebuilt from
+    // the HttpOnly refresh cookie in init().
     this._token.set(res.accessToken);
     this._user.set(res);
-    void this.storage.setItem(TOKEN_KEY, res.accessToken);
-    void this.storage.setItem(USER_KEY, res);
   }
 }

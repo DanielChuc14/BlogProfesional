@@ -163,8 +163,14 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHsts();
+}
+
 app.UseMiddleware<CorrelationIdMiddleware>();
 app.UseMiddleware<ExceptionMiddleware>();
+app.UseMiddleware<SecurityHeadersMiddleware>();
 
 if (app.Environment.IsDevelopment())
 {
@@ -223,7 +229,8 @@ if (!app.Environment.IsEnvironment("Testing"))
     var config      = scope.ServiceProvider.GetRequiredService<IConfiguration>();
     var logger      = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
 
-    await RoleSeeder.SeedAsync(roleManager, userManager, config, logger);
+    await PageViewPartitionSeeder.EnsureAsync(db, logger);
+    await RoleSeeder.SeedAsync(roleManager, userManager, db, config, logger);
     await DataSeeder.SeedAsync(userManager, db, logger);
     await LanguageSeeder.SeedAsync(db, logger);
 }

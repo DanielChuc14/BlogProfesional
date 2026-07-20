@@ -9,7 +9,7 @@ namespace BlogPlatform.API.Controllers;
 
 [ApiController]
 [Route("api/posts")]
-public class PostsController(IPostService postService, IAnalyticsService analyticsService) : ControllerBase
+public class PostsController(IPostService postService, IServiceScopeFactory scopeFactory) : ControllerBase
 {
     [HttpGet]
     public async Task<IActionResult> GetFeed(
@@ -35,16 +35,29 @@ public class PostsController(IPostService postService, IAnalyticsService analyti
     [HttpGet("{slug}")]
     public async Task<IActionResult> GetBySlug(string slug, CancellationToken ct)
     {
-        var result = await postService.GetBySlugAsync(slug, ct);
+        // Endpoint publico, pero si llega un Bearer valido User ya esta poblado,
+        // lo que permite devolver el estado de "me gusta" del visitante.
+        var result = await postService.GetBySlugAsync(slug, GetUserId(), ct);
         if (result.IsSuccess && result.Data is not null)
         {
             var ip = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
             var ua = Request.Headers.UserAgent.ToString();
             var referrer = Request.Headers.Referer.ToString();
-            _ = analyticsService.TrackPageViewAsync(
-                result.Data.Id, result.Data.Author.UserId,
-                ip, ua, string.IsNullOrEmpty(referrer) ? null : referrer,
-                CancellationToken.None);
+            var postId = result.Data.Id;
+            var authorId = result.Data.Author.UserId;
+
+            // El tracking corre fuera de la request para no penalizar la respuesta,
+            // por lo que necesita su propio scope de DI: el de la request (y con el
+            // su AppDbContext) ya esta liberado cuando esta tarea se ejecuta.
+            _ = Task.Run(async () =>
+            {
+                using var scope = scopeFactory.CreateScope();
+                var analytics = scope.ServiceProvider.GetRequiredService<IAnalyticsService>();
+                await analytics.TrackPageViewAsync(
+                    postId, authorId,
+                    ip, ua, string.IsNullOrEmpty(referrer) ? null : referrer,
+                    CancellationToken.None);
+            });
         }
         return result.ToActionResult(this);
     }

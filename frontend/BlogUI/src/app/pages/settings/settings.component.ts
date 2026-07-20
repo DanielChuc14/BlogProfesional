@@ -81,11 +81,16 @@ export class SettingsComponent implements OnInit {
       next: prefs => {
         this.receiveEmailNotifications = prefs.receiveEmailNotifications;
         this.profileVisibility         = prefs.profileVisibility;
-        this.selectedLang              = prefs.preferredLanguage;
+        this.selectedLang              = prefs.preferredLanguage || this.t.currentLang();
         this.prefsLoaded = true;
         this.prefsLoading.set(false);
       },
-      error: () => this.prefsLoading.set(false),
+      error: () => {
+        // El selector nunca debe quedar vacio: sin preferencia usable,
+        // se muestra el idioma activo.
+        this.selectedLang = this.selectedLang || this.t.currentLang();
+        this.prefsLoading.set(false);
+      },
     });
   }
 
